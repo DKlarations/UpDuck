@@ -34,10 +34,17 @@ public class Ducky : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
         Debug.DrawRay(transform.position, Vector2.down * 0.6f, Color.red);
  
- 
+        
         if (hit.collider != null 
+        && currentState == DuckyState.Falling
+        && body.velocity.y == 0)
+        {
+            OnLanding();
+            currentState = DuckyState.Dead;
+        }
+        else if (hit.collider != null 
         && body.velocity.y == 0
-        /* && currentState != DuckyState.Falling */)
+         && currentState != DuckyState.Falling )
         {
             OnLanding();
             currentState = DuckyState.Idle;
@@ -80,17 +87,7 @@ public class Ducky : MonoBehaviour
         {
             currentState = DuckyState.Falling;
         }
-
-        //While landed, not moving, and past the threshold, activate faceplant
-/*         if (hit.collider != null
-        && currentState == DuckyState.Falling
-        && body.velocity.y == 0)
-        {
-            Debug.Log("SHOULD BE FACEPLANTED");
-            OnLanding();
-            currentState = DuckyState.Dead;
-        } */
-        
+          
         animator.SetFloat("Speed", Mathf.Abs(Input.GetAxis("Horizontal")));
     }
 
@@ -145,6 +142,7 @@ public class Ducky : MonoBehaviour
                 break;
 
             default:
+                animator.SetBool("IsDead", false);
                 OnLanding();
                 break;
         }

@@ -996,10 +996,10 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
-  flapStrength: 25
+  flapStrength: 27
   maxFlapDuration: 1
   animator: {fileID: 1002723917}
-  deadThreshold: 1
+  deadThreshold: 3
 --- !u!70 &1002723919
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
