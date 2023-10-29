@@ -999,6 +999,7 @@ MonoBehaviour:
   flapStrength: 27
   maxFlapDuration: 1
   animator: {fileID: 1002723917}
+  inputBlocked: 0
   deadThreshold: 3
 --- !u!70 &1002723919
 CapsuleCollider2D:

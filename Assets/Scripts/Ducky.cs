@@ -21,6 +21,7 @@ public class Ducky : MonoBehaviour
     private bool isGrounded = false;
     private bool facingRight = true;
     private float airborneTime;
+    public bool inputBlocked = false;
     [SerializeField] private float deadThreshold = 1f;
 
     void Awake()
@@ -37,22 +38,27 @@ public class Ducky : MonoBehaviour
         
         if (hit.collider != null 
         && currentState == DuckyState.Falling
+        /* && airborneTime > deadThreshold */
         && body.velocity.y == 0)
         {
             OnLanding();
             currentState = DuckyState.Dead;
+            
         }
         else if (hit.collider != null 
         && body.velocity.y == 0
-         && currentState != DuckyState.Falling )
+        && currentState != DuckyState.Dead) 
         {
             OnLanding();
             currentState = DuckyState.Idle;
-            flapDuration = 0.0f;
-            isGrounded = true;
-        } else
+        } 
+        else
         {
             isGrounded = false;
+        }
+        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0)
+        {
+            currentState = DuckyState.Running;
         }
 
         if (Input.GetKeyDown(KeyCode.Space) 
@@ -79,6 +85,11 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Falling;
         }
 
+        if (flapDuration >= maxFlapDuration)
+        {
+            currentState = DuckyState.Falling;
+        }
+
 
         if (body.velocity.y < 0 
         && currentState != DuckyState.Flapping  
@@ -95,6 +106,8 @@ public class Ducky : MonoBehaviour
     {
         float horizontalInput = Input.GetAxis("Horizontal");
         body.velocity = new Vector2(horizontalInput * runSpeed, body.velocity.y);
+
+
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
         
         if (hit.collider != null)
@@ -110,12 +123,18 @@ public class Ducky : MonoBehaviour
         // Handle state-specific logic
         switch (currentState)
         {
+            case DuckyState.Running:
+                animator.SetBool("IsDead", false);
+                break;
+
             case DuckyState.Jumping:
                 if (shouldJump)
                 {
+                    animator.SetBool("IsDead", false);
                     body.velocity = new Vector2(body.velocity.x, jumpSpeed);
                     animator.SetBool("IsJumping", true);
                     shouldJump = false;
+                    Debug.Log("JUMPING");
                 }
                 break;
 
@@ -125,20 +144,21 @@ public class Ducky : MonoBehaviour
                 animator.SetBool("IsFlapping", true);
                 animator.SetBool("IsJumping", false);
                 animator.SetBool("IsFalling", false);
-                if (flapDuration >= maxFlapDuration)
-                {
-                    currentState = DuckyState.Falling;
-                }
+                Debug.Log("FLAPPING");
+                
                 break;
 
             case DuckyState.Falling:
                 animator.SetBool("IsFalling", true);
                 animator.SetBool("IsFlapping", false);
                 animator.SetBool("IsJumping", false);
+                Debug.Log("FALLING");
                 break;
 
             case DuckyState.Dead:
                 animator.SetBool("IsDead", true);
+                inputBlocked = true;
+                Debug.Log("DEAD");
                 break;
 
             default:
@@ -159,6 +179,9 @@ public class Ducky : MonoBehaviour
 
     public void OnLanding()
     {
+        flapDuration = 0.0f;
+        isGrounded = true;
+
         animator.SetBool("IsJumping", false);
         animator.SetBool("IsFlapping", false);
         animator.SetBool("IsFalling", false);
@@ -171,4 +194,5 @@ public class Ducky : MonoBehaviour
         gameObject.transform.localScale = currentScale;
         facingRight = !facingRight;
     }
+    
 }
