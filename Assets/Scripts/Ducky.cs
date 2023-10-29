@@ -6,6 +6,7 @@ public class Ducky : MonoBehaviour
 {
     enum DuckyState { Idle, Running, Jumping, Flapping, Rolling, Falling, Dead } // The state machine variable
     private DuckyState currentState = DuckyState.Idle;
+    public AudioClip[] impactSounds;
 
     [SerializeField] private float runSpeed = 7f;
     [SerializeField] private float jumpSpeed = 14f;
@@ -38,7 +39,6 @@ public class Ducky : MonoBehaviour
         
         if (hit.collider != null 
         && currentState == DuckyState.Falling
-        /* && airborneTime > deadThreshold */
         && body.velocity.y == 0)
         {
             OnLanding();
@@ -134,7 +134,6 @@ public class Ducky : MonoBehaviour
                     body.velocity = new Vector2(body.velocity.x, jumpSpeed);
                     animator.SetBool("IsJumping", true);
                     shouldJump = false;
-                    Debug.Log("JUMPING");
                 }
                 break;
 
@@ -144,21 +143,18 @@ public class Ducky : MonoBehaviour
                 animator.SetBool("IsFlapping", true);
                 animator.SetBool("IsJumping", false);
                 animator.SetBool("IsFalling", false);
-                Debug.Log("FLAPPING");
-                
                 break;
 
             case DuckyState.Falling:
                 animator.SetBool("IsFalling", true);
                 animator.SetBool("IsFlapping", false);
                 animator.SetBool("IsJumping", false);
-                Debug.Log("FALLING");
                 break;
 
             case DuckyState.Dead:
                 animator.SetBool("IsDead", true);
                 inputBlocked = true;
-                Debug.Log("DEAD");
+                AudioClip clipToPlay = impactSounds[Random.Range(0, impactSounds.Length)];
                 break;
 
             default:
