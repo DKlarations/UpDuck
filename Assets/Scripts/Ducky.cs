@@ -6,6 +6,8 @@ public class Ducky : MonoBehaviour
 {
     enum DuckyState { Idle, Running, Jumping, Flapping, Rolling, Falling, Dead } // The state machine variable
     private DuckyState currentState = DuckyState.Idle;
+    public AudioSource audioPlayer;
+    public AudioClip[] jumpSounds;
     public AudioClip[] impactSounds;
 
     [SerializeField] private float runSpeed = 7f;
@@ -21,8 +23,9 @@ public class Ducky : MonoBehaviour
     private bool shouldJump;
     private bool isGrounded = false;
     private bool facingRight = true;
+    private bool jumpInput = false;
+    
     private float airborneTime;
-    public bool inputBlocked = false;
     [SerializeField] private float deadThreshold = 1f;
 
     void Awake()
@@ -36,6 +39,7 @@ public class Ducky : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
         Debug.DrawRay(transform.position, Vector2.down * 0.6f, Color.red);
  
+        GetMovement();
         
         if (hit.collider != null 
         && currentState == DuckyState.Falling
@@ -43,6 +47,9 @@ public class Ducky : MonoBehaviour
         {
             OnLanding();
             currentState = DuckyState.Dead;
+            AudioClip clipToPlay = impactSounds[Random.Range(0, impactSounds.Length)];
+            audioPlayer.clip = clipToPlay;
+            audioPlayer.Play(); 
             
         }
         else if (hit.collider != null 
@@ -56,6 +63,8 @@ public class Ducky : MonoBehaviour
         {
             isGrounded = false;
         }
+
+
         if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0)
         {
             currentState = DuckyState.Running;
@@ -64,16 +73,22 @@ public class Ducky : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) 
         && airborneTime <= coyoteTime)
         {
+            jumpInput = true;
             shouldJump = true;
             currentState = DuckyState.Jumping;
-        }
 
+            AudioClip clipToPlay = jumpSounds[Random.Range(0, jumpSounds.Length)];
+            audioPlayer.clip = clipToPlay;
+            audioPlayer.Play(); 
+        }
+        
         if (Input.GetKey(KeyCode.Space) 
         && !isGrounded 
         && flapDuration < maxFlapDuration 
         && body.velocity.y < 0  
         && airborneTime > coyoteTime)
         {
+            jumpInput = true;
             currentState = DuckyState.Flapping;
         }
 
@@ -90,6 +105,12 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Falling;
         }
 
+        if (Input.GetKey(KeyCode.S)
+        && (currentState == DuckyState.Jumping || currentState == DuckyState.Falling))
+        {
+            currentState = DuckyState.Rolling;
+        }
+
 
         if (body.velocity.y < 0 
         && currentState != DuckyState.Flapping  
@@ -100,12 +121,16 @@ public class Ducky : MonoBehaviour
         }
           
         animator.SetFloat("Speed", Mathf.Abs(Input.GetAxis("Horizontal")));
+
+        if (Input.GetKey(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
     }
 
     void FixedUpdate()
     {
-        float horizontalInput = Input.GetAxis("Horizontal");
-        body.velocity = new Vector2(horizontalInput * runSpeed, body.velocity.y);
+
 
 
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
@@ -133,8 +158,13 @@ public class Ducky : MonoBehaviour
                     animator.SetBool("IsDead", false);
                     body.velocity = new Vector2(body.velocity.x, jumpSpeed);
                     animator.SetBool("IsJumping", true);
+                    animator.SetBool("IsRolling", false);
                     shouldJump = false;
                 }
+                break;
+
+            case DuckyState.Rolling:
+                animator.SetBool("IsRolling", true);
                 break;
 
             case DuckyState.Flapping:
@@ -143,18 +173,20 @@ public class Ducky : MonoBehaviour
                 animator.SetBool("IsFlapping", true);
                 animator.SetBool("IsJumping", false);
                 animator.SetBool("IsFalling", false);
+                animator.SetBool("IsRolling", false);
                 break;
 
             case DuckyState.Falling:
                 animator.SetBool("IsFalling", true);
                 animator.SetBool("IsFlapping", false);
                 animator.SetBool("IsJumping", false);
+                animator.SetBool("IsRolling", false);
                 break;
 
             case DuckyState.Dead:
                 animator.SetBool("IsDead", true);
-                inputBlocked = true;
-                AudioClip clipToPlay = impactSounds[Random.Range(0, impactSounds.Length)];
+                
+                
                 break;
 
             default:
@@ -163,6 +195,15 @@ public class Ducky : MonoBehaviour
                 break;
         }
 
+        
+    }
+    public void GetMovement()
+    {
+        float horizontalInput = Input.GetAxis("Horizontal");
+        body.velocity = new Vector2(horizontalInput * runSpeed, body.velocity.y);
+
+
+        //change the character facing
         if (horizontalInput > 0 && !facingRight)
         {
             FlipCharacter();
@@ -177,6 +218,7 @@ public class Ducky : MonoBehaviour
     {
         flapDuration = 0.0f;
         isGrounded = true;
+        jumpInput = false;  // Reset jump input flag
 
         animator.SetBool("IsJumping", false);
         animator.SetBool("IsFlapping", false);
@@ -189,6 +231,17 @@ public class Ducky : MonoBehaviour
         currentScale.x *= -1;
         gameObject.transform.localScale = currentScale;
         facingRight = !facingRight;
+    }
+    public void Bounce(float bounceForce)
+    {
+        float totalForce = bounceForce;
+        if (jumpInput)
+        {
+            totalForce += jumpSpeed;
+            jumpInput = false;  // Reset jump input flag
+        }
+        body.velocity = new Vector2(body.velocity.x, 0);  // Reset vertical velocity
+        body.AddForce(new Vector2(0, totalForce), ForceMode2D.Impulse);  // Apply combined force
     }
     
 }

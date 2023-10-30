@@ -6,6 +6,6 @@ PhysicsMaterial2D:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Bouncy Platform
+  m_Name: Super Bouncy
   friction: 0.4
-  bounciness: 2
+  bounciness: 3

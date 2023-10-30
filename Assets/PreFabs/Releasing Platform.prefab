@@ -189,5 +189,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d288c86191f0a8349a5178063db27098, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  delayBeforeDisable: 1
+  delayBeforeDisable: 0.5
   delayBeforeEnable: 2
