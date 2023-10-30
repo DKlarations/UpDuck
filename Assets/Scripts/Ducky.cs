@@ -20,7 +20,10 @@ public class Ducky : MonoBehaviour
     [SerializeField] private float maxFlapDuration = 2.0f;
 
     public Animator animator;
+    private string currentAnimation = "Ducky Idle";
     private Rigidbody2D body;
+    public ParticleSystem moveDust;
+    public ParticleSystem bounceDust;
     private bool shouldJump;
     private bool isGrounded = false;
     private bool facingRight = true;
@@ -30,9 +33,21 @@ public class Ducky : MonoBehaviour
     private float airborneTime;
     [SerializeField] private float deadThreshold = 1f;
 
+    //================
+    //Animation States
+    //================
+    const string DUCKY_IDLE = "Ducky Idle";
+    const string DUCKY_JUMP = "Ducky Jump";
+    const string DUCKY_FLAP = "Ducky Flap";
+    const string DUCKY_FALL = "Ducky Fall";
+    const string DUCKY_DEAD = "Ducky Dead";
+    const string DUCKY_ROLL = "Ducky Roll";
+    const string DUCKY_WALK = "Ducky Walk";
+
     void Awake()
     {
         body = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
     }
 
     void Update()
@@ -42,9 +57,6 @@ public class Ducky : MonoBehaviour
         Debug.DrawRay(transform.position, Vector2.down * 0.6f, Color.red);
  
         UpdateMovement();
-
-
-
         
         if (hit.collider != null 
         && currentState == DuckyState.Falling
@@ -52,6 +64,7 @@ public class Ducky : MonoBehaviour
         {
             OnLanding();
             currentState = DuckyState.Dead;
+            moveDust.Play(); //Dust on dead landing
             AudioClip clipToPlay = impactSounds[Random.Range(0, impactSounds.Length)];
             audioPlayer.clip = clipToPlay;
             audioPlayer.Play(); 
@@ -75,19 +88,32 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Running;
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) 
+        if (Input.GetButtonDown("Jump") 
         && airborneTime <= coyoteTime)
         {
             jumpInput = true;
             shouldJump = true;
-            currentState = DuckyState.Jumping;
 
+            if (shouldJump)
+                {
+                    currentState = DuckyState.Jumping;
+                    body.velocity = new Vector2(body.velocity.x, jumpSpeed);
+                    shouldJump = false;
+                }
+
+            moveDust.Play();
             AudioClip clipToPlay = jumpSounds[Random.Range(0, jumpSounds.Length)];
             audioPlayer.clip = clipToPlay;
             audioPlayer.Play(); 
         }
+
+        //Shorter Jump Code. 
+        if(Input.GetButtonUp("Jump") && body.velocity.y > 0)
+        {
+            body.velocity = new Vector2(body.velocity.x, body.velocity.y*.5f);
+        }
         
-        if (Input.GetKey(KeyCode.Space) 
+        if (Input.GetButton("Jump") 
         && !isGrounded 
         && flapDuration < maxFlapDuration 
         && body.velocity.y < 0  
@@ -97,8 +123,11 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Flapping;
         }
 
-        //If Spacebar is released, Release the flap while saving flap time.
-        if (Input.GetKeyUp(KeyCode.Space)
+
+
+
+        //If Jump is released, Release the flap while saving flap time.
+        if (Input.GetButtonUp("Jump")
         && currentState == DuckyState.Flapping
         && flapDuration < maxFlapDuration)
         {
@@ -125,8 +154,6 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Falling;
         }
           
-        animator.SetFloat("Speed", Mathf.Abs(Input.GetAxis("Horizontal")));
-
         if (Input.GetKey(KeyCode.Escape))
         {
             Application.Quit();
@@ -154,57 +181,54 @@ public class Ducky : MonoBehaviour
         switch (currentState)
         {
             case DuckyState.Running:
-                animator.SetBool("IsDead", false);
+                ChangeAnimationState(DUCKY_WALK);
                 break;
 
-            case DuckyState.Jumping:
-                if (shouldJump)
-                {
-                    animator.SetBool("IsDead", false);
-                    body.velocity = new Vector2(body.velocity.x, jumpSpeed);
-                    animator.SetBool("IsJumping", true);
-                    animator.SetBool("IsRolling", false);
-                    shouldJump = false;
-                }
+            case DuckyState.Jumping:                
+                ChangeAnimationState(DUCKY_JUMP);
                 break;
 
             case DuckyState.Rolling:
-                animator.SetBool("IsRolling", true);
+                ChangeAnimationState(DUCKY_ROLL);
                 break;
 
             case DuckyState.Flapping:
                 flapDuration += Time.fixedDeltaTime;
                 body.velocity = new Vector2(body.velocity.x, body.velocity.y + flapStrength * Time.fixedDeltaTime);
-                animator.SetBool("IsFlapping", true);
-                animator.SetBool("IsJumping", false);
-                animator.SetBool("IsFalling", false);
-                animator.SetBool("IsRolling", false);
+                ChangeAnimationState(DUCKY_FLAP);
                 break;
 
             case DuckyState.Falling:
-                animator.SetBool("IsFalling", true);
-                animator.SetBool("IsFlapping", false);
-                animator.SetBool("IsJumping", false);
-                animator.SetBool("IsRolling", false);
+                ChangeAnimationState(DUCKY_FALL);
                 break;
 
             case DuckyState.Dead:
-                animator.SetBool("IsDead", true);
-                
-                
+                ChangeAnimationState(DUCKY_DEAD);
                 break;
 
             default:
-                animator.SetBool("IsDead", false);
+                ChangeAnimationState(DUCKY_IDLE);
                 OnLanding();
                 break;
         }
 
         
     }
+    void ChangeAnimationState(string newAnimation)
+    {
+        //stop the same animation from interrupting itself
+        if (currentAnimation == newAnimation) return;
+
+        //play the animation
+        animator.Play(newAnimation);
+
+        //reassign the current animation
+        currentAnimation = newAnimation;
+
+    }
     public void UpdateMovement()
     {
-        horizontalPush = Mathf.SmoothStep(0, 1, .75f)*horizontalPush;
+        horizontalPush = Mathf.SmoothStep(0, 1, .6f)*horizontalPush;
         if (Mathf.Abs(horizontalPush) < 1)
         {
             horizontalPush = 0;
@@ -228,13 +252,9 @@ public class Ducky : MonoBehaviour
 
     public void OnLanding()
     {
-        flapDuration = 0.0f;
-        isGrounded = true;
-        jumpInput = false;  // Reset jump input flag
-
-        animator.SetBool("IsJumping", false);
-        animator.SetBool("IsFlapping", false);
-        animator.SetBool("IsFalling", false);
+        flapDuration = 0.0f; // Reset flapDuration to maximum
+        isGrounded = true;   // Reset Grounded Flag 
+        jumpInput = false;   // Reset jump input flag
     }
 
     public void FlipCharacter()
@@ -243,10 +263,15 @@ public class Ducky : MonoBehaviour
         currentScale.x *= -1;
         gameObject.transform.localScale = currentScale;
         facingRight = !facingRight;
+        if (isGrounded)
+            {
+                moveDust.Play();
+            }
     }
     public void Bounce(float bounceForce)
     {
         float totalForce = bounceForce;
+        bounceDust.Play();
         if (jumpInput)
         {
             totalForce += jumpSpeed;
