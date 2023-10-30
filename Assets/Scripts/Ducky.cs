@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Ducky : MonoBehaviour
@@ -24,6 +25,7 @@ public class Ducky : MonoBehaviour
     private bool isGrounded = false;
     private bool facingRight = true;
     private bool jumpInput = false;
+    public float horizontalPush = 0f;
     
     private float airborneTime;
     [SerializeField] private float deadThreshold = 1f;
@@ -39,7 +41,10 @@ public class Ducky : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
         Debug.DrawRay(transform.position, Vector2.down * 0.6f, Color.red);
  
-        GetMovement();
+        UpdateMovement();
+
+
+
         
         if (hit.collider != null 
         && currentState == DuckyState.Falling
@@ -197,21 +202,28 @@ public class Ducky : MonoBehaviour
 
         
     }
-    public void GetMovement()
+    public void UpdateMovement()
     {
+        horizontalPush = Mathf.SmoothStep(0, 1, .75f)*horizontalPush;
+        if (Mathf.Abs(horizontalPush) < 1)
+        {
+            horizontalPush = 0;
+        }
+
+
         float horizontalInput = Input.GetAxis("Horizontal");
-        body.velocity = new Vector2(horizontalInput * runSpeed, body.velocity.y);
+        body.velocity = new Vector2(horizontalInput * runSpeed + horizontalPush, body.velocity.y);
 
 
         //change the character facing
-        if (horizontalInput > 0 && !facingRight)
+        if ((horizontalInput > 0 && !facingRight) || (horizontalInput < 0 && facingRight))
         {
             FlipCharacter();
         }
-        else if (horizontalInput < 0 && facingRight)
-        {
-            FlipCharacter();
-        }
+     }
+    public void SetHorizontalPush(float push)
+    {
+        horizontalPush += push;
     }
 
     public void OnLanding()
@@ -225,7 +237,7 @@ public class Ducky : MonoBehaviour
         animator.SetBool("IsFalling", false);
     }
 
-    void FlipCharacter()
+    public void FlipCharacter()
     {
         Vector3 currentScale = gameObject.transform.localScale;
         currentScale.x *= -1;
