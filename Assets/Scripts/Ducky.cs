@@ -72,18 +72,22 @@ public class Ducky : MonoBehaviour
         }
         else if (hit.collider != null 
         && body.velocity.y == 0
-        && currentState != DuckyState.Dead) 
+        && currentState != DuckyState.Dead)
         {
             OnLanding();
             currentState = DuckyState.Idle;
         } 
+        else if (hit.collider != null)
+        {
+            OnLanding();
+        }
         else
         {
             isGrounded = false;
         }
 
 
-        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0)
+        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0 && isGrounded)
         {
             currentState = DuckyState.Running;
         }
@@ -110,6 +114,7 @@ public class Ducky : MonoBehaviour
         //Shorter Jump Code. 
         if(Input.GetButtonUp("Jump") && body.velocity.y > 0)
         {
+            currentState = DuckyState.Jumping;
             body.velocity = new Vector2(body.velocity.x, body.velocity.y*.5f);
         }
         

@@ -13,13 +13,17 @@ public class PlatformController : MonoBehaviour
     private Color activePlatformColor = new Color(51 / 255f, 193 / 255f, 250 / 255f, 1.0f); // 33C1FA
     private Color deactivatedPlatformColor = new Color(20 / 255f, 73 / 255f, 94 / 255f, 1.0f); // 14495E
 
+    public AudioSource audioPlayer;
+    public AudioClip iceCrackingSounds;
+    public AudioClip iceReturningSounds;
+
     void Start()
     {
         boxCollider = GetComponent<BoxCollider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-    void OnTriggerEnter2D(Collider2D collider)
+    public void OnTriggerEnter2D(Collider2D collider)
     {
         if (collider.gameObject.name == "Ducky")
         {
@@ -27,7 +31,7 @@ public class PlatformController : MonoBehaviour
         }
     }
 
-    IEnumerator DisableAndEnablePlatform()
+    public IEnumerator DisableAndEnablePlatform()
     {
         // Delay before disabling the platform
         yield return new WaitForSeconds(delayBeforeDisable);
@@ -38,6 +42,11 @@ public class PlatformController : MonoBehaviour
         // Change the sprite color using the deactivatedPlatformColor constant
         spriteRenderer.color = deactivatedPlatformColor;
 
+        //Play Ice Cracking Sounds
+        AudioClip clipToPlay = iceCrackingSounds;
+        audioPlayer.clip = clipToPlay;
+        audioPlayer.Play(); 
+
         // Delay before re-enabling the platform
         yield return new WaitForSeconds(delayBeforeEnable);
 
@@ -46,5 +55,9 @@ public class PlatformController : MonoBehaviour
 
         // Reset the sprite color to the activePlatformColor constant
         spriteRenderer.color = activePlatformColor;
+
+        //Play Ice Returning Sounds
+        audioPlayer.clip = iceReturningSounds;
+        audioPlayer.Play(); 
     }
 }

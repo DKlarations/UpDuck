@@ -4,6 +4,8 @@ using UnityEngine;
 public class BouncyPlatform : MonoBehaviour
 {
     [SerializeField] private float bounceForce = 10f; // Set desired bounce force
+    public AudioSource audioPlayer;
+    public AudioClip boingSounds;
 
     public float GetBounceForce()
     {
@@ -20,7 +22,13 @@ public class BouncyPlatform : MonoBehaviour
                 Ducky playerController = collision.gameObject.GetComponent<Ducky>();
                 if (playerController != null)
                 {
+                    //Add Bounce
                     playerController.Bounce(bounceForce);
+
+                    //Play Boing - I DON'T THINK THIS NEEDS TO BE EVERY TIME.
+                    AudioClip clipToPlay = boingSounds;
+                    audioPlayer.clip = clipToPlay;
+                    audioPlayer.Play(); 
                 }
             }
         }
