@@ -18,6 +18,8 @@ public class Ducky : MonoBehaviour
     [SerializeField] private float flapStrength = 2.0f;
     private float flapDuration = 0.0f;
     [SerializeField] private float maxFlapDuration = 2.0f;
+    [SerializeField] private float jumpBufferTime = 0.15f;
+    private float jumpBufferCounter;
 
     public Animator animator;
     private string currentAnimation = "Ducky Idle";
@@ -28,6 +30,7 @@ public class Ducky : MonoBehaviour
     private bool isGrounded = false;
     private bool facingRight = true;
     private bool jumpInput = false;
+    
     public float horizontalPush = 0f;
     
     private float airborneTime;
@@ -58,13 +61,16 @@ public class Ducky : MonoBehaviour
  
         UpdateMovement();
         
+        //Landing logic, check for faceplant, check for idle, otherwise not on ground.
         if (hit.collider != null 
         && currentState == DuckyState.Falling
         && body.velocity.y == 0)
         {
             OnLanding();
             currentState = DuckyState.Dead;
+
             moveDust.Play(); //Dust on dead landing
+
             AudioClip clipToPlay = impactSounds[Random.Range(0, impactSounds.Length)];
             audioPlayer.clip = clipToPlay;
             audioPlayer.Play(); 
@@ -92,7 +98,18 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Running;
         }
 
-        if (Input.GetButtonDown("Jump") 
+        //Jump Buffer Logic.  
+        if (Input.GetButtonDown("Jump"))
+        {
+            jumpBufferCounter = jumpBufferTime;
+        }
+        else
+        {
+            jumpBufferCounter -= Time.deltaTime;
+        }
+
+        //Jump Logic
+        if (jumpBufferCounter > 0f 
         && airborneTime <= coyoteTime)
         {
             jumpInput = true;
@@ -104,20 +121,26 @@ public class Ducky : MonoBehaviour
                     body.velocity = new Vector2(body.velocity.x, jumpSpeed);
                     shouldJump = false;
                 }
-
+            //Create Dust Particles
             moveDust.Play();
+
+            //Play random jump sound.
             AudioClip clipToPlay = jumpSounds[Random.Range(0, jumpSounds.Length)];
             audioPlayer.clip = clipToPlay;
             audioPlayer.Play(); 
+
+            //reset jump buffer
+            jumpBufferCounter = 0f;
         }
 
-        //Shorter Jump Code. 
+        //Small Jump Code. 
         if(Input.GetButtonUp("Jump") && body.velocity.y > 0)
         {
             currentState = DuckyState.Jumping;
             body.velocity = new Vector2(body.velocity.x, body.velocity.y*.5f);
         }
         
+        //Flapping code. 
         if (Input.GetButton("Jump") 
         && !isGrounded 
         && flapDuration < maxFlapDuration 
@@ -128,9 +151,6 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Flapping;
         }
 
-
-
-
         //If Jump is released, Release the flap while saving flap time.
         if (Input.GetButtonUp("Jump")
         && currentState == DuckyState.Flapping
@@ -139,18 +159,20 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Falling;
         }
 
+        //Start fall animation if past maxFlapDuration
         if (flapDuration >= maxFlapDuration)
         {
             currentState = DuckyState.Falling;
         }
 
+        //Start Roll animation 
         if (Input.GetKey(KeyCode.S)
         && (currentState == DuckyState.Jumping || currentState == DuckyState.Falling))
         {
             currentState = DuckyState.Rolling;
         }
 
-
+        //UNCERTAIN IF THIS IS NEEDED
         if (body.velocity.y < 0 
         && currentState != DuckyState.Flapping  
         && currentState != DuckyState.Dead
@@ -158,7 +180,8 @@ public class Ducky : MonoBehaviour
         {
             currentState = DuckyState.Falling;
         }
-          
+        
+        //Exit the program with Escape
         if (Input.GetKey(KeyCode.Escape))
         {
             Application.Quit();
@@ -171,6 +194,7 @@ public class Ducky : MonoBehaviour
 
 
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
+        
         
         if (hit.collider != null)
         {
@@ -233,6 +257,7 @@ public class Ducky : MonoBehaviour
     }
     public void UpdateMovement()
     {
+
         horizontalPush = Mathf.SmoothStep(0, 1, .6f)*horizontalPush;
         if (Mathf.Abs(horizontalPush) < 1)
         {
@@ -264,10 +289,13 @@ public class Ducky : MonoBehaviour
 
     public void FlipCharacter()
     {
+        // flip character's facing.
         Vector3 currentScale = gameObject.transform.localScale;
         currentScale.x *= -1;
         gameObject.transform.localScale = currentScale;
         facingRight = !facingRight;
+
+        //Create Dust Particles on direction change if on ground
         if (isGrounded)
             {
                 moveDust.Play();
@@ -275,8 +303,10 @@ public class Ducky : MonoBehaviour
     }
     public void Bounce(float bounceForce)
     {
-        float totalForce = bounceForce;
-        bounceDust.Play();
+        //Create Bounce effect.
+        float totalForce = bounceForce; 
+        bounceDust.Play(); //Create Bounce Particles
+
         if (jumpInput)
         {
             totalForce += jumpSpeed;
