@@ -6,7 +6,17 @@ public class BouncyPlatform : MonoBehaviour
     [SerializeField] private float bounceForce = 10f; // Set desired bounce force
     public AudioSource audioPlayer;
     public AudioClip boingSounds;
+    public Animator animator;
+    //================
+    //Animation States
+    //================
+    const string BOUNCE_ANIMATION = "MembranePlatform";
+    const string IDLE_ANIMATION = "MembranePlatformIdle";
 
+    void Awake()
+    {
+        animator = GetComponent<Animator>();
+    }
     public float GetBounceForce()
     {
         return bounceForce;
@@ -25,6 +35,9 @@ public class BouncyPlatform : MonoBehaviour
                     //Add Bounce
                     playerController.Bounce(bounceForce);
 
+                    //Play Bounce Animation
+                    animator.Play(BOUNCE_ANIMATION);
+
                     //Play Boing - I DON'T THINK THIS NEEDS TO BE EVERY TIME.
                     AudioClip clipToPlay = boingSounds;
                     audioPlayer.clip = clipToPlay;
@@ -32,5 +45,10 @@ public class BouncyPlatform : MonoBehaviour
                 }
             }
         }
+    }
+
+    private void BackToIdleAnimation()
+    {
+        animator.Play(IDLE_ANIMATION);
     }
 }

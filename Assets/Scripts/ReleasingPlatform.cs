@@ -16,11 +16,20 @@ public class PlatformController : MonoBehaviour
     public AudioSource audioPlayer;
     public AudioClip iceCrackingSounds;
     public AudioClip iceReturningSounds;
+    public Animator animator;
+    //================
+    //Animation States
+    //================
+    const string IDLE_ANIMATION = "IcePlatformIdle";
+    const string CRACKING_ANIMATION = "IcePlatformCrack";
+    const string REFORMING_ANIMATION = "IcePlatformReform";
+    
 
     void Start()
     {
         boxCollider = GetComponent<BoxCollider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
     }
 
     public void OnTriggerEnter2D(Collider2D collider)
@@ -28,11 +37,16 @@ public class PlatformController : MonoBehaviour
         if (collider.gameObject.name == "Ducky")
         {
             StartCoroutine(DisableAndEnablePlatform());
+
+
         }
     }
 
     public IEnumerator DisableAndEnablePlatform()
     {
+        //Play Cracking Animation
+        animator.Play(CRACKING_ANIMATION);
+        
         // Delay before disabling the platform
         yield return new WaitForSeconds(delayBeforeDisable);
 
@@ -41,6 +55,8 @@ public class PlatformController : MonoBehaviour
 
         // Change the sprite color using the deactivatedPlatformColor constant
         spriteRenderer.color = deactivatedPlatformColor;
+
+
 
         //Play Ice Cracking Sounds
         AudioClip clipToPlay = iceCrackingSounds;
@@ -56,8 +72,16 @@ public class PlatformController : MonoBehaviour
         // Reset the sprite color to the activePlatformColor constant
         spriteRenderer.color = activePlatformColor;
 
+        //Play Reforming Animation
+        animator.Play(REFORMING_ANIMATION);
+
         //Play Ice Returning Sounds
         audioPlayer.clip = iceReturningSounds;
         audioPlayer.Play(); 
+    }
+
+    private void BackToIdleAnimation()
+    {
+        animator.Play(IDLE_ANIMATION);
     }
 }

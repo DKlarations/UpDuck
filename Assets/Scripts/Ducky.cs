@@ -19,6 +19,7 @@ public class Ducky : MonoBehaviour
     private float flapDuration = 0.0f;
     [SerializeField] private float maxFlapDuration = 2.0f;
     [SerializeField] private float jumpBufferTime = 0.15f;
+    [SerializeField] private float maxFallVelocity = 30f;
     private float jumpBufferCounter;
 
     public Animator animator;
@@ -180,18 +181,20 @@ public class Ducky : MonoBehaviour
         {
             currentState = DuckyState.Falling;
         }
+
+        //FALL SPEED CLAMPING
+        body.velocity = Vector3.ClampMagnitude(body.velocity, maxFallVelocity);
         
         //Exit the program with Escape
         if (Input.GetKey(KeyCode.Escape))
         {
             Application.Quit();
         }
+       
     }
 
     void FixedUpdate()
     {
-
-
 
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
         
