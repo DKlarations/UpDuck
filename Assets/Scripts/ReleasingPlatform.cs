@@ -8,10 +8,7 @@ public class PlatformController : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     [SerializeField] private float delayBeforeDisable = 2.0f; // Delay before disabling (adjust as needed)
     [SerializeField] private float delayBeforeEnable = 2.0f; // Delay before re-enabling (adjust as needed)
-
-    // Declare constants for your colors
-    private Color activePlatformColor = new Color(51 / 255f, 193 / 255f, 250 / 255f, 1.0f); // 33C1FA
-    private Color deactivatedPlatformColor = new Color(20 / 255f, 73 / 255f, 94 / 255f, 1.0f); // 14495E
+    private bool isNotBroken = true;
 
     public AudioSource audioPlayer;
     public AudioClip iceCrackingSounds;
@@ -32,31 +29,28 @@ public class PlatformController : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    public void OnTriggerEnter2D(Collider2D collider)
+        
+    public void OnTriggerStay2D(Collider2D collider)
     {
-        if (collider.gameObject.name == "Ducky")
+        if (collider.gameObject.name == "Ducky" && isNotBroken)
         {
             StartCoroutine(DisableAndEnablePlatform());
-
-
         }
-    }
+    } 
 
     public IEnumerator DisableAndEnablePlatform()
     {
+        //Set Condition to Broken
+        isNotBroken = false;
+
         //Play Cracking Animation
         animator.Play(CRACKING_ANIMATION);
-        
+
         // Delay before disabling the platform
         yield return new WaitForSeconds(delayBeforeDisable);
 
         // Disable the Box Collider
         boxCollider.enabled = false;
-
-        // Change the sprite color using the deactivatedPlatformColor constant
-        spriteRenderer.color = deactivatedPlatformColor;
-
-
 
         //Play Ice Cracking Sounds
         AudioClip clipToPlay = iceCrackingSounds;
@@ -69,15 +63,15 @@ public class PlatformController : MonoBehaviour
         // Re-enable the Box Collider
         boxCollider.enabled = true;
 
-        // Reset the sprite color to the activePlatformColor constant
-        spriteRenderer.color = activePlatformColor;
-
         //Play Reforming Animation
         animator.Play(REFORMING_ANIMATION);
 
         //Play Ice Returning Sounds
         audioPlayer.clip = iceReturningSounds;
-        audioPlayer.Play(); 
+        audioPlayer.Play();
+
+        //Set to Not broken 
+        isNotBroken = true;
     }
 
     private void BackToIdleAnimation()

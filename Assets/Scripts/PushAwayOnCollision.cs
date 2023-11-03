@@ -17,7 +17,8 @@ public class PushAwayOnCollision : MonoBehaviour
             if (playerRb != null)
             {
                 playerRb.AddForce(pushDirection * pushForce, ForceMode2D.Impulse);
-                playerController.SetHorizontalPush(pushDirection.x > 0 ? pushForce : -pushForce);    
+                playerController.SetHorizontalPush(pushDirection.x > 0 ? pushForce : -pushForce);   
+                 
                 Debug.Log("Push force applied: " + pushDirection);  // This will confirm that the force is being applied
             }
         }

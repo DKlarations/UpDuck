@@ -19,6 +19,7 @@ public class Ducky : MonoBehaviour
     private float flapDuration = 0.0f;
     [SerializeField] private float maxFlapDuration = 2.0f;
     [SerializeField] private float jumpBufferTime = 0.15f;
+    [SerializeField] private float fallMultiplier = 2.5f;
     [SerializeField] private float maxFallVelocity = 30f;
     private float jumpBufferCounter;
 
@@ -140,6 +141,13 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Jumping;
             body.velocity = new Vector2(body.velocity.x, body.velocity.y*.5f);
         }
+
+        //Higher Gravity when at end of jump
+        if (body.velocity.y < 0 || (body.velocity.y > 0 && !Input.GetButton("Jump")))
+        {
+            body.velocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+        }
+
         
         //Flapping code. 
         if (Input.GetButton("Jump") 
@@ -184,6 +192,7 @@ public class Ducky : MonoBehaviour
 
         //FALL SPEED CLAMPING
         body.velocity = Vector3.ClampMagnitude(body.velocity, maxFallVelocity);
+        Debug.Log("Velocity is: " + body.velocity);
         
         //Exit the program with Escape
         if (Input.GetKey(KeyCode.Escape))
