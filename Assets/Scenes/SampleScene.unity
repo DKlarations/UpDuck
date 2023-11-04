@@ -547,6 +547,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4785815612467615382, guid: ce719d645a6805641900d6134a875e8f, type: 3}
+      propertyPath: m_Size.y
+      value: 0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 4785815612467615382, guid: ce719d645a6805641900d6134a875e8f, type: 3}
+      propertyPath: m_Offset.y
+      value: 0.18
+      objectReference: {fileID: 0}
     - target: {fileID: 7302852685357045549, guid: ce719d645a6805641900d6134a875e8f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 94.65
@@ -1575,7 +1583,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 82.31, y: 17.1, z: -10}
+  m_LocalPosition: {x: -29.9, y: 92.19, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2986,7 +2994,7 @@ Transform:
   m_GameObject: {fileID: 1002723912}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 82.31, y: 15.6, z: 0}
+  m_LocalPosition: {x: -29.9, y: 90.69, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3480,7 +3488,7 @@ Transform:
   m_GameObject: {fileID: 1071107921}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 82.31, y: 17.1, z: -10}
+  m_LocalPosition: {x: -29.9, y: 92.19, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5950,7 +5958,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 970817956182260347, guid: ce83d245c2e918447842bf5674120356, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 28.77
+      value: 30.28
       objectReference: {fileID: 0}
     - target: {fileID: 970817956182260347, guid: ce83d245c2e918447842bf5674120356, type: 3}
       propertyPath: m_LocalPosition.z
@@ -11707,6 +11715,14 @@ PrefabInstance:
     m_TransformParent: {fileID: 84117889}
     m_Modifications:
     - target: {fileID: 1113219152834016766, guid: ccc4d2e573502b2438829f62688ed6ab, type: 3}
+      propertyPath: m_LocalScale.x
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1113219152834016766, guid: ccc4d2e573502b2438829f62688ed6ab, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1113219152834016766, guid: ccc4d2e573502b2438829f62688ed6ab, type: 3}
       propertyPath: m_LocalPosition.x
       value: -73.525894
       objectReference: {fileID: 0}
@@ -11749,6 +11765,10 @@ PrefabInstance:
     - target: {fileID: 5543423622100669323, guid: ccc4d2e573502b2438829f62688ed6ab, type: 3}
       propertyPath: m_Name
       value: Windmill (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 6635261127627170645, guid: ccc4d2e573502b2438829f62688ed6ab, type: 3}
+      propertyPath: rotationSpeed
+      value: 30
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

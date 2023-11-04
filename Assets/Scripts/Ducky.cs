@@ -58,15 +58,16 @@ public class Ducky : MonoBehaviour
     void Update()
     {
         // Determine current state based on input and conditions
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
-        Debug.DrawRay(transform.position, Vector2.down * 0.6f, Color.red);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.51f, groundLayer);
+        Debug.DrawRay(transform.position, Vector2.down * 0.51f, Color.red);
  
         UpdateMovement();
         
         //Landing logic, check for faceplant, check for idle, otherwise not on ground.
         if (hit.collider != null 
         && currentState == DuckyState.Falling
-        && body.velocity.y == 0)
+        && body.velocity.y == 0
+        )
         {
             OnLanding();
             currentState = DuckyState.Dead;
@@ -161,12 +162,12 @@ public class Ducky : MonoBehaviour
         }
 
         //If Jump is released, Release the flap while saving flap time.
-        if (Input.GetButtonUp("Jump")
+         if (Input.GetButtonUp("Jump")
         && currentState == DuckyState.Flapping
         && flapDuration < maxFlapDuration)
         {
-            currentState = DuckyState.Falling;
-        }
+            currentState = DuckyState.Jumping;
+        } 
 
         //Start fall animation if past maxFlapDuration
         if (flapDuration >= maxFlapDuration)
@@ -175,11 +176,11 @@ public class Ducky : MonoBehaviour
         }
 
         //Start Roll animation 
-        if (Input.GetKey(KeyCode.S)
+/*         if (Input.GetKey(KeyCode.S)
         && (currentState == DuckyState.Jumping || currentState == DuckyState.Falling))
         {
             currentState = DuckyState.Rolling;
-        }
+        } */
 
         //UNCERTAIN IF THIS IS NEEDED
         if (body.velocity.y < 0 
@@ -192,7 +193,7 @@ public class Ducky : MonoBehaviour
 
         //FALL SPEED CLAMPING
         body.velocity = Vector3.ClampMagnitude(body.velocity, maxFallVelocity);
-        Debug.Log("Velocity is: " + body.velocity);
+        
         
         //Exit the program with Escape
         if (Input.GetKey(KeyCode.Escape))
@@ -205,7 +206,7 @@ public class Ducky : MonoBehaviour
     void FixedUpdate()
     {
 
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.51f, groundLayer);
         
         
         if (hit.collider != null)

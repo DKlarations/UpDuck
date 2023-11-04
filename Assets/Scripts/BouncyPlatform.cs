@@ -13,7 +13,7 @@ public class BouncyPlatform : MonoBehaviour
     const string BOUNCE_ANIMATION = "MembranePlatform";
     const string IDLE_ANIMATION = "MembranePlatformIdle";
 
-    void Awake()
+    void Start()
     {
         animator = GetComponent<Animator>();
     }
@@ -22,14 +22,14 @@ public class BouncyPlatform : MonoBehaviour
         return bounceForce;
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D collider)
     {
-        if (collision.gameObject.CompareTag("Player")) 
+        if (collider.gameObject.CompareTag("Player")) 
         {
-            Rigidbody2D rb = collision.gameObject.GetComponent<Rigidbody2D>();
+            Rigidbody2D rb = collider.gameObject.GetComponent<Rigidbody2D>();
             if (rb != null)
             {
-                Ducky playerController = collision.gameObject.GetComponent<Ducky>();
+                Ducky playerController = collider.gameObject.GetComponent<Ducky>();
                 if (playerController != null)
                 {
                     //Add Bounce
@@ -38,7 +38,7 @@ public class BouncyPlatform : MonoBehaviour
                     //Play Bounce Animation
                     animator.Play(BOUNCE_ANIMATION);
 
-                    //Play Boing - I DON'T THINK THIS NEEDS TO BE EVERY TIME.
+                    //Play Boing 
                     AudioClip clipToPlay = boingSounds;
                     audioPlayer.clip = clipToPlay;
                     audioPlayer.Play(); 
