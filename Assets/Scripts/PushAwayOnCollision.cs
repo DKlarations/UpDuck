@@ -3,6 +3,8 @@ using UnityEngine;
 public class PushAwayOnCollision : MonoBehaviour
 {
     [SerializeField] private float pushForce = 30f;  // Adjust the force as needed
+    public AudioSource audioPlayer;
+    public AudioClip boingSounds;
 
     void OnCollisionEnter2D(Collision2D collision)
     {
@@ -18,8 +20,10 @@ public class PushAwayOnCollision : MonoBehaviour
             {
                 playerRb.AddForce(pushDirection * pushForce, ForceMode2D.Impulse);
                 playerController.SetHorizontalPush(pushDirection.x > 0 ? pushForce : -pushForce);   
-                 
-                Debug.Log("Push force applied: " + pushDirection);  // This will confirm that the force is being applied
+                //Play Boing 
+                AudioClip clipToPlay = boingSounds;
+                audioPlayer.clip = clipToPlay;
+                audioPlayer.Play();
             }
         }
     }

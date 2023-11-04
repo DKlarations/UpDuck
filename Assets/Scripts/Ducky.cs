@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ public class Ducky : MonoBehaviour
 {
     enum DuckyState { Idle, Running, Jumping, Flapping, Rolling, Falling, Dead } // The state machine variable
     private DuckyState currentState = DuckyState.Idle;
+    private CinemachineImpulseSource impulseSource;
     public AudioSource audioPlayer;
     public AudioClip[] jumpSounds;
     public AudioClip[] impactSounds;
@@ -18,6 +20,7 @@ public class Ducky : MonoBehaviour
     [SerializeField] private float flapStrength = 2.0f;
     private float flapDuration = 0.0f;
     [SerializeField] private float maxFlapDuration = 2.0f;
+    [SerializeField] private float faceplantInputLockTime = .5f;
     [SerializeField] private float jumpBufferTime = 0.15f;
     [SerializeField] private float fallMultiplier = 2.5f;
     [SerializeField] private float maxFallVelocity = 30f;
@@ -32,6 +35,7 @@ public class Ducky : MonoBehaviour
     private bool isGrounded = false;
     private bool facingRight = true;
     private bool jumpInput = false;
+    private bool canInput = true;
     
     public float horizontalPush = 0f;
     
@@ -53,6 +57,7 @@ public class Ducky : MonoBehaviour
     {
         body = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        impulseSource = GetComponent<CinemachineImpulseSource>();
     }
 
     void Update()
@@ -70,6 +75,8 @@ public class Ducky : MonoBehaviour
         )
         {
             OnLanding();
+            FacePlant();
+            
             currentState = DuckyState.Dead;
 
             moveDust.Play(); //Dust on dead landing
@@ -95,8 +102,13 @@ public class Ducky : MonoBehaviour
             isGrounded = false;
         }
 
+        //Swap to jumping if dead and falling
+        if(currentState == DuckyState.Dead && body.velocity.y != 0)
+        {
+            currentState = DuckyState.Jumping;
+        }
 
-        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0 && isGrounded)
+        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0 && isGrounded && canInput)
         {
             currentState = DuckyState.Running;
         }
@@ -113,6 +125,7 @@ public class Ducky : MonoBehaviour
 
         //Jump Logic
         if (jumpBufferCounter > 0f 
+        && canInput
         && airborneTime <= coyoteTime)
         {
             jumpInput = true;
@@ -246,6 +259,7 @@ public class Ducky : MonoBehaviour
 
             case DuckyState.Dead:
                 ChangeAnimationState(DUCKY_DEAD);
+
                 break;
 
             default:
@@ -270,20 +284,21 @@ public class Ducky : MonoBehaviour
     }
     public void UpdateMovement()
     {
+        float horizontalInput = Input.GetAxis("Horizontal");
 
-        horizontalPush = Mathf.SmoothStep(0, 1, .6f)*horizontalPush;
-        if (Mathf.Abs(horizontalPush) < 1)
+        if (canInput)
         {
-            horizontalPush = 0;
+            horizontalPush = Mathf.SmoothStep(0, 1, .6f)*horizontalPush;
+            if (Mathf.Abs(horizontalPush) < 1)
+            {
+                horizontalPush = 0;
+            }
+            body.velocity = new Vector2(horizontalInput * runSpeed + horizontalPush, body.velocity.y);
         }
 
 
-        float horizontalInput = Input.GetAxis("Horizontal");
-        body.velocity = new Vector2(horizontalInput * runSpeed + horizontalPush, body.velocity.y);
-
-
         //change the character facing
-        if ((horizontalInput > 0 && !facingRight) || (horizontalInput < 0 && facingRight))
+        if (canInput && ((horizontalInput > 0 && !facingRight) || (horizontalInput < 0 && facingRight)))
         {
             FlipCharacter();
         }
@@ -298,6 +313,24 @@ public class Ducky : MonoBehaviour
         flapDuration = 0.0f; // Reset flapDuration to maximum
         isGrounded = true;   // Reset Grounded Flag 
         jumpInput = false;   // Reset jump input flag
+    }
+    public void FacePlant()
+    {
+        CameraShakeManager.instance.CameraShake(impulseSource);
+        StartCoroutine(InputDelayCoroutine());
+    }
+
+    IEnumerator InputDelayCoroutine()
+    {
+        
+        //disable further Input
+        canInput = false;
+
+        //wait for specified delay
+        yield return new WaitForSeconds(faceplantInputLockTime);
+
+        //Re-enable Input
+        canInput = true;
     }
 
     public void FlipCharacter()
