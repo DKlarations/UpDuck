@@ -102,8 +102,8 @@ public class Ducky : MonoBehaviour
             isGrounded = false;
         }
 
-        //Swap to jumping if dead and falling
-        if(currentState == DuckyState.Dead && body.velocity.y != 0)
+        //Swap to jumping if in dead and falling after dead delay.
+        if(currentState == DuckyState.Dead && body.velocity.y != 0 && canInput)
         {
             currentState = DuckyState.Jumping;
         }
@@ -121,10 +121,10 @@ public class Ducky : MonoBehaviour
         else
         {
             jumpBufferCounter -= Time.deltaTime;
-        }
+        } 
 
         //Jump Logic
-        if (jumpBufferCounter > 0f 
+        if ( jumpBufferCounter > 0f  
         && canInput
         && airborneTime <= coyoteTime)
         {
@@ -156,7 +156,7 @@ public class Ducky : MonoBehaviour
             body.velocity = new Vector2(body.velocity.x, body.velocity.y*.5f);
         }
 
-        //Higher Gravity when at end of jump
+        //Higher Gravity when past apex of jump
         if (body.velocity.y < 0 || (body.velocity.y > 0 && !Input.GetButton("Jump")))
         {
             body.velocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
@@ -195,7 +195,7 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Rolling;
         } */
 
-        //UNCERTAIN IF THIS IS NEEDED
+        //UNCERTAIN IF THIS IS NEEDED??
         if (body.velocity.y < 0 
         && currentState != DuckyState.Flapping  
         && currentState != DuckyState.Dead
