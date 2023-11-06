@@ -19,6 +19,7 @@ public class RevealerPlatform : MonoBehaviour
         for (int i = 0; i < platformsToEnable.Length; i++)
         {
             renderers[i] = platformsToEnable[i].GetComponent<SpriteRenderer>();
+            
         }
     }
 
