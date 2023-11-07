@@ -12,10 +12,18 @@ public class TimerPlatform : MonoBehaviour
     public AudioClip platformOnSounds;
     public AudioClip TimerTickingSound;
     public AudioClip platformOffSounds;
+    public Animator animator;
     private bool platformsAreOn = false;
+    //================
+    //Animation States
+    //================
+    const string ON_ANIMATION = "TimedPlatformOn";
+    const string OFF_ANIMATION = "TimedPlatformOff";
 
     void Start()
     {
+        animator = GetComponent<Animator>();
+
         renderers = new SpriteRenderer[platformsToEnable.Length];
         colliders = new BoxCollider2D[platformsToEnable.Length];
 
@@ -31,6 +39,10 @@ public class TimerPlatform : MonoBehaviour
         if (collider.gameObject.name == "Ducky" && !platformsAreOn)
         {
             StartCoroutine(EnablePlatforms());
+
+            //Play ON Animation
+            animator.Play(ON_ANIMATION);
+
             platformsAreOn = true;
         }
     }
@@ -58,6 +70,9 @@ public class TimerPlatform : MonoBehaviour
 
         audioPlayer.Stop();
         audioPlayer.pitch = 1f;
+
+        //Play OFF Animation
+        animator.Play(OFF_ANIMATION);
 
         platformsAreOn = false;
     }
