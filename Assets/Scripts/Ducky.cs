@@ -32,6 +32,8 @@ public class Ducky : MonoBehaviour
     private Rigidbody2D body;
     public ParticleSystem moveDust;
     public ParticleSystem bounceDust;
+    public CameraFollow cameraFollow;
+
     private bool shouldJump;
     private bool onGround;
     private bool facingRight = true;
@@ -84,6 +86,11 @@ public class Ducky : MonoBehaviour
         {
             OnLanding();  //Reset all airborne stats and flags
             FacePlant();  //Faceplant including input pause
+
+            if (currentState != DuckyState.Dead)
+            {
+                body.velocity = new Vector2(0,0);  //Stop all momentum when faceplanting
+            }
             
             currentState = DuckyState.Dead;
 
@@ -211,6 +218,11 @@ public class Ducky : MonoBehaviour
         {
             body.velocity = Vector3.ClampMagnitude(body.velocity, maxFallVelocity);
         }
+
+        if(body.velocity.y < 0 && !onGround)
+        {
+            cameraFollow.AdjustCameraForJump(!onGround);
+        }
         
         //Exit the program with Escape
         if (Input.GetKey(KeyCode.Escape))
@@ -255,7 +267,6 @@ public class Ducky : MonoBehaviour
                 break;
 
             case DuckyState.Dead:
-                body.velocity = new Vector2(0,0);  //Stop all momentum when faceplanting
                 ChangeAnimationState(DUCKY_DEAD);
 
                 break;
@@ -309,6 +320,7 @@ public class Ducky : MonoBehaviour
     public void OnLanding()
     {
         Debug.Log("Landed");
+        cameraFollow.AdjustCameraForJump(!onGround);
         flapDuration = 0.0f; // Reset flapDuration to maximum
         airborneTime = 0f;   // Reset airborneTime to Zero
         shouldJump = true;   // Reset the Should Jump Flag
@@ -340,6 +352,11 @@ public class Ducky : MonoBehaviour
         gameObject.transform.localScale = currentScale;
         facingRight = !facingRight;
 
+        if (cameraFollow != null)
+        {
+            cameraFollow.AdjustCameraForDirection(facingRight);
+        }
+
         //Create Dust Particles on direction change if on ground
         if (onGround)
             {
@@ -348,6 +365,9 @@ public class Ducky : MonoBehaviour
     }
     public void Bounce(float bounceForce)
     {
+        // Reset flapDuration to 0 to avoid Tired and TiredFall behavior
+        flapDuration = 0.0f;
+
         currentState = DuckyState.Idle;
         currentState = DuckyState.Jumping;
 
@@ -365,6 +385,8 @@ public class Ducky : MonoBehaviour
         }
         body.velocity = new Vector2(body.velocity.x, 0);  // Reset vertical velocity
         body.AddForce(new Vector2(0, totalForce), ForceMode2D.Impulse);  // Apply combined force
+
+        jumpBufferCounter = 0f;
     }
     
 }
