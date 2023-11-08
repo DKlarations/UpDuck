@@ -32,6 +32,8 @@ public class TimerPlatform : MonoBehaviour
             renderers[i] = platformsToEnable[i].GetComponent<SpriteRenderer>();
             colliders[i] = platformsToEnable[i].GetComponent<BoxCollider2D>();
         }
+
+        PreloadAudio();
     }
 
     void OnTriggerEnter2D(Collider2D collider)
@@ -49,24 +51,16 @@ public class TimerPlatform : MonoBehaviour
 
     IEnumerator EnablePlatforms()
     {
-        for (int i = 0; i < platformsToEnable.Length; i++)
-        {
-            renderers[i].enabled = true;
-            colliders[i].enabled = true;
-        }
+        SetPlatformsActive(true);
 
         audioPlayer.clip = TimerTickingSound;
         audioPlayer.Play();
 
-        yield return new WaitForSeconds(platformsEnabledTime - 1);        
-        audioPlayer.pitch = 1.5f;
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(platformsEnabledTime - 1.5f); 
 
-        for (int i = 0; i < platformsToEnable.Length; i++)
-        {
-            renderers[i].enabled = false;
-            colliders[i].enabled = false;
-        }
+        yield return StartCoroutine(ChangePitchOverTime(audioPlayer, 1.0f, 1.5f, 1.5f));
+
+        SetPlatformsActive(false);
 
         audioPlayer.Stop();
         audioPlayer.pitch = 1f;
@@ -76,4 +70,45 @@ public class TimerPlatform : MonoBehaviour
 
         platformsAreOn = false;
     }
+    IEnumerator ChangePitchOverTime(AudioSource audioSource, float startPitch, float endPitch, float duration)
+    {
+        float currentTime = 0;
+
+        while (currentTime < duration)
+        {
+            currentTime += Time.deltaTime;
+            float newPitch = Mathf.Lerp(startPitch, endPitch, currentTime / duration);
+            audioSource.pitch = newPitch;
+            yield return null; // Wait for the next frame
+        }
+
+        audioSource.pitch = endPitch; 
+    }
+    private void PreloadAudio()
+    {
+        // Temporarily save the original volume
+        float originalVolume = audioPlayer.volume;
+
+        // Set volume to zero to mute the audio
+        audioPlayer.volume = 0f;
+
+        // Play and stop the audio clips to preload them
+        audioPlayer.PlayOneShot(platformOnSounds);
+        audioPlayer.PlayOneShot(platformOffSounds);
+        audioPlayer.PlayOneShot(TimerTickingSound);
+
+        // Immediately stop the audio player
+        audioPlayer.Stop();
+
+        // Restore the original volume
+        audioPlayer.volume = originalVolume;
+    }
+    void SetPlatformsActive(bool active)
+{
+    foreach (var platform in platformsToEnable)
+    {
+        platform.GetComponent<SpriteRenderer>().enabled = active;
+        platform.GetComponent<BoxCollider2D>().enabled = active;
+    }
+}
 }

@@ -13,7 +13,7 @@ public class Ducky : MonoBehaviour
     public AudioClip[] jumpSounds;
     public AudioClip[] impactSounds;
 
-    [SerializeField] private float runSpeed = 7f;
+    [SerializeField] private float walkSpeed = 7f;
     [SerializeField] private float jumpSpeed = 14f;
     [SerializeField] private float coyoteTime = 0.15f;
     [SerializeField] private LayerMask groundLayer;
@@ -76,6 +76,13 @@ public class Ducky : MonoBehaviour
         Debug.DrawRay(transform.position - raycastOffset, Vector2.down * 0.515f, Color.red);
  
         UpdateMovement();
+
+        // Debugging feature: Fly upwards when 'P' key and 'W' are pressed together.
+        if (Input.GetKey(KeyCode.P) && Input.GetKey(KeyCode.I))
+        {
+            body.AddForce(Vector2.up * 2f, ForceMode2D.Impulse);
+        }
+
         
         //Landing logic, check for faceplant, check for idle, otherwise Ducky is not on ground.
         if (onGround
@@ -103,13 +110,20 @@ public class Ducky : MonoBehaviour
             
         }
         else if (onGround
-        && body.velocity.y <= yVelocityBuffer*2
-        && body.velocity.y >= -yVelocityBuffer*2
+        && body.velocity.y <= yVelocityBuffer
+        && body.velocity.y >= -yVelocityBuffer
         && currentState != DuckyState.Dead)  
         {
             OnLanding();
             currentState = DuckyState.Idle;
         } 
+        else if (!onGround
+        && body.velocity.y < 0
+        && (currentState != DuckyState.Falling || currentState != DuckyState.TiredFall))
+        {
+            airborneTime += Time.deltaTime;
+            currentState = DuckyState.Jumping;
+        }
         else
         {
             airborneTime += Time.deltaTime;
@@ -292,26 +306,35 @@ public class Ducky : MonoBehaviour
 
     }
     public void UpdateMovement()
+{
+    float horizontalInput = Input.GetAxis("Horizontal");
+    float speedMultiplier = 1f;  // Default speed multiplier
+
+    // Check if shift key is held down to increase speed
+    if (onGround && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
     {
-        float horizontalInput = Input.GetAxis("Horizontal");
+        speedMultiplier = 2f;
+    }
 
-        if (canInput)
+    if (canInput)
+    {
+        horizontalPush = Mathf.SmoothStep(0, 1, .6f) * horizontalPush;
+        if (Mathf.Abs(horizontalPush) < 1)
         {
-            horizontalPush = Mathf.SmoothStep(0, 1, .6f)*horizontalPush;
-            if (Mathf.Abs(horizontalPush) < 1)
-            {
-                horizontalPush = 0;
-            }
-            body.velocity = new Vector2(horizontalInput * runSpeed + horizontalPush, body.velocity.y);
+            horizontalPush = 0;
         }
 
+        // Apply the speed multiplier to the walkSpeed
+        body.velocity = new Vector2(horizontalInput * walkSpeed * speedMultiplier + horizontalPush, body.velocity.y);
+    }
 
-        //change the character facing
-        if (canInput && ((horizontalInput > 0 && !facingRight) || (horizontalInput < 0 && facingRight)))
-        {
-            FlipCharacter();
-        }
-     }
+    // Change the character facing direction
+    if (canInput && ((horizontalInput > 0 && !facingRight) || (horizontalInput < 0 && facingRight)))
+    {
+        FlipCharacter();
+    }
+}
+
     public void SetHorizontalPush(float push)
     {
         horizontalPush += push;
