@@ -228,6 +228,7 @@ public class Ducky : MonoBehaviour
             body.velocity = Vector3.ClampMagnitude(body.velocity, maxFallVelocity);
         }
 
+        //Adjust camera with a jump
         if(body.velocity.y < 0 && !onGround)
         {
             cameraFollow.AdjustCameraForJump(!onGround);
@@ -368,7 +369,8 @@ public class Ducky : MonoBehaviour
             jumpBufferCounter -= Time.deltaTime;
         }
     }
-    private void HandleJump()
+    //NOW DEFUNCT
+    private void OldHandleJump()
     {
         //Jump Logic
         if (jumpBufferCounter > 0f
@@ -391,6 +393,35 @@ public class Ducky : MonoBehaviour
             jumpBufferCounter = 0f;
         }
     }
+    private void HandleJump()
+    {
+        // Jump Logic
+        if (jumpBufferCounter > 0f 
+        && canInput 
+        && onGround 
+        && airborneTime <= coyoteTime 
+        && shouldJump)
+        { 
+            currentState = DuckyState.Jumping;
+
+            // Cancel out any existing vertical velocity before applying the jump impulse
+            body.velocity = new Vector2(body.velocity.x, 0);
+
+            // Apply an impulse force upwards
+            body.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
+
+            // Create Dust Particles
+            moveDust.Play();
+
+            // Play random jump sound.
+            PlayRandomSound(jumpSounds);
+
+            // Reset timers and flags
+            shouldJump = false;
+            jumpBufferCounter = 0f;
+        }
+    }
+
     private bool IsFallingState() 
     {
         return currentState == DuckyState.Falling || currentState == DuckyState.TiredFall;
@@ -475,10 +506,6 @@ public class Ducky : MonoBehaviour
     
     private void OnDrawGizmos()
     {
-        // Use the same size for the box as you use in the BoxCast
-        //Vector2 boxCastSize = new Vector2(1f, 0.1f);
-        //float castDistance = 0.1f;
-
         // The center of the box cast, slightly above the player to ensure it starts inside the player collider
         Vector2 castOrigin = (Vector2)transform.position + (Vector2)boxcastOffset + Vector2.up * 0.05f;
 

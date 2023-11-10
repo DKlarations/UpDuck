@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 3483208445247820559}
   - component: {fileID: 5308687412316916053}
   m_Layer: 3
-  m_Name: TeeterTotter
+  m_Name: YellowTeeterTotter
   m_TagString: IcePlatform
   m_Icon: {fileID: 5721338939258241955, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
@@ -207,7 +207,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2021f0150089da9468411f8da0ac30da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tiltSpeed: 0.05
+  tiltSpeed: 0.035
   levelingSpeed: 0.25
   levelingDelay: 1
   angleTolerance: 0.15
