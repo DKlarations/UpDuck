@@ -135,9 +135,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40d4204e68193cf4d8d8844717c9abf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pushForce: 100
+  pushForce: 25
   audioPlayer: {fileID: 4713281965791222688}
-  boingSounds: {fileID: 8300000, guid: f16ebe9cd0dda764f87ca03aa0dc3554, type: 3}
+  boingSound: {fileID: 8300000, guid: f16ebe9cd0dda764f87ca03aa0dc3554, type: 3}
 --- !u!61 &1814873233132706020
 BoxCollider2D:
   m_ObjectHideFlags: 0

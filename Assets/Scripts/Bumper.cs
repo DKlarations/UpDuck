@@ -6,7 +6,9 @@ using UnityEngine;
 public class Bumper : MonoBehaviour
 {
 
-    public float bumpStrength = 10f;  // The strength of the bump
+    [SerializeField] private float bumpStrength = 10f;  // The strength of the bump
+    [SerializeField] private float cooldownTime = 0.2f;  // Adjust the time as needed
+    public AudioSource audioSource;
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -23,8 +25,9 @@ public class Bumper : MonoBehaviour
                 Debug.Log("Collision Detected at " + contactNormal);
 
                 // Apply the bump force
-                playerController.BumperBounce(bumpStrength,contactNormal);
-                playerController.SetHorizontalPush(contactNormal.x < 0 ? bumpStrength : -bumpStrength);
+                //playerController.BumperBounce(bumpStrength,contactNormal);
+                playerController.ApplyPushForce(-bumpStrength * contactNormal, cooldownTime);
+                //playerController.SetHorizontalPush(contactNormal.x < 0 ? bumpStrength : -bumpStrength);
 
                 
                 PlayBumpSound();
@@ -36,7 +39,7 @@ public class Bumper : MonoBehaviour
 
     private void PlayBumpSound()
     {
-        // Play bump sound effect
+        audioSource.Play();
     }
 
     private void AnimateBumper()

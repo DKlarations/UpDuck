@@ -32,6 +32,7 @@ public class Ducky : MonoBehaviour
     [SerializeField] private float maxFallVelocity = 30f;
     [SerializeField] private float yVelocityBuffer = .1f;
     private float jumpBufferCounter;
+    private float pushCooldownTimer = 0f;
 
     private string currentAnimation = "Ducky Idle";
     private Rigidbody2D body;
@@ -90,7 +91,7 @@ public class Ducky : MonoBehaviour
         onGround = hit.collider != null;
 
 
-        UpdateMovement();
+        //UpdateMovement();
 
         // Debugging feature: Fly upwards when 'P' key and 'W' are pressed together.
         if (Input.GetKey(KeyCode.P) && Input.GetKey(KeyCode.I))
@@ -223,7 +224,7 @@ public class Ducky : MonoBehaviour
         }
 
         //Fall Speed Clamping
-        if(body.velocity.y < 0)
+        if(body.velocity.y < -10)
         {
             body.velocity = Vector3.ClampMagnitude(body.velocity, maxFallVelocity);
         }
@@ -244,6 +245,8 @@ public class Ducky : MonoBehaviour
 
     void FixedUpdate()
     {
+        UpdateMovement();
+
         // Handle state-specific logic
         switch (currentState)
         {
@@ -311,21 +314,25 @@ public class Ducky : MonoBehaviour
         float horizontalInput = Input.GetAxis("Horizontal");
         float speedMultiplier = 1f;  // Default speed multiplier
 
+        // Reduce the cooldown timer by the time since the last frame
+        pushCooldownTimer -= Time.deltaTime;
+
         // Check if shift key is held down to increase speed
         if (onGround && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
         {
             speedMultiplier = 1.5f;
         }
 
-        if (canInput)
+        if (canInput && pushCooldownTimer <= 0f)
         {
-            horizontalPush = Mathf.SmoothStep(0, 1, .6f) * horizontalPush;
+            // Calculate the desired velocity
+            float targetVelocityX = horizontalInput * walkSpeed * speedMultiplier;
+            
+            // Calculate the difference between current velocity and desired velocity
+            float velocityChangeX = targetVelocityX - body.velocity.x;
 
-            // Apply deadzone to horizontalPush just before it's used
-            horizontalPush = ApplyDeadzone(horizontalPush, 1f);
-
-            // OLD Apply the speed multiplier to the walkSpeed
-            body.velocity = new Vector2(horizontalInput * walkSpeed * speedMultiplier + horizontalPush, body.velocity.y);
+            // Apply force based on the difference. Using Impulse mode applies the force immediately
+            body.AddForce(new Vector2(velocityChangeX, 0), ForceMode2D.Impulse);
         }
 
         // Change the character facing direction
@@ -334,6 +341,22 @@ public class Ducky : MonoBehaviour
             FlipCharacter();
         }
     }
+    public void ApplyPushForce(Vector2 force, float cooldownTime)
+    {
+        flapDuration = 0.0f;
+
+        currentState = DuckyState.Idle;
+        currentState = DuckyState.Jumping;
+        airborneTime = 0f;   // Reset airborneTime to Zero
+
+        // Apply the push force
+        body.AddForce(force, ForceMode2D.Impulse);
+        
+        // Set the cooldown timer to prevent immediate input-based force application
+        pushCooldownTimer = cooldownTime; // This is the cooldown period in seconds
+        jumpBufferCounter = 0f;
+    }
+
     private float ApplyDeadzone(float value, float threshold)
     {
         if (Mathf.Abs(value) < threshold)
@@ -341,12 +364,6 @@ public class Ducky : MonoBehaviour
             return 0f;
         }
         return value;
-    }
-
-
-    public void SetHorizontalPush(float push)
-    {
-        horizontalPush += push;
     }
 
     public void OnLanding()
@@ -367,30 +384,6 @@ public class Ducky : MonoBehaviour
         else
         {
             jumpBufferCounter -= Time.deltaTime;
-        }
-    }
-    //NOW DEFUNCT
-    private void OldHandleJump()
-    {
-        //Jump Logic
-        if (jumpBufferCounter > 0f
-        && canInput
-        && onGround
-        && airborneTime <= coyoteTime
-        && shouldJump)
-        { 
-            currentState = DuckyState.Jumping;
-            body.velocity = new Vector2(body.velocity.x, jumpSpeed);
-
-            //Create Dust Particles
-            moveDust.Play();
-
-            //Play random jump sound.
-            PlayRandomSound(jumpSounds);
-
-            //reset timers and flags
-            shouldJump = false;
-            jumpBufferCounter = 0f;
         }
     }
     private void HandleJump()
@@ -495,13 +488,6 @@ public class Ducky : MonoBehaviour
         body.AddForce(new Vector2(0, totalForce), ForceMode2D.Impulse);  // Apply combined force
 
         jumpBufferCounter = 0f;
-    }
-    public void BumperBounce(float bounceForce, Vector2 bounceDirection)
-    {   
-        float bounceDirectionX = -bounceDirection.x * bounceForce;
-        float bounceDirectionY = -bounceDirection.y * bounceForce;
-        Debug.Log("Bounce Force: " + bounceDirectionX + ", " + bounceDirectionY);
-        body.AddForce(new Vector2(bounceDirectionX, bounceDirectionY), ForceMode2D.Impulse);
     }
     
     private void OnDrawGizmos()
