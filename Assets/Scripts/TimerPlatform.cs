@@ -7,18 +7,23 @@ public class TimerPlatform : MonoBehaviour
     public GameObject[] platformsToEnable;
     private SpriteRenderer[] renderers;
     private BoxCollider2D[] colliders;
+    public Animator[] hiddenPlatformAnimators;
     [SerializeField] private float platformsEnabledTime = 2f;
     public AudioSource audioPlayer;
     public AudioClip platformOnSounds;
     public AudioClip TimerTickingSound;
     public AudioClip platformOffSounds;
     public Animator animator;
+    
+    HiddenPlatform hiddenPlatform;
     private bool platformsAreOn = false;
-    //================
-    //Animation States
-    //================
+    //================//
+    //Animation States//
+    //================//
     const string ON_ANIMATION = "TimedPlatformOn";
     const string OFF_ANIMATION = "TimedPlatformOff";
+    const string HIDDEN_PLATFORM_ON_ANIMATION = "HiddenPlatformReveal";
+    const string HIDDEN_PLATFORM_OFF_ANIMATION = "HiddenPlatformDisappear";
 
     void Start()
     {
@@ -26,11 +31,13 @@ public class TimerPlatform : MonoBehaviour
 
         renderers = new SpriteRenderer[platformsToEnable.Length];
         colliders = new BoxCollider2D[platformsToEnable.Length];
+        hiddenPlatformAnimators = new Animator[platformsToEnable.Length];
 
         for (int i = 0; i < platformsToEnable.Length; i++)
         {
             renderers[i] = platformsToEnable[i].GetComponent<SpriteRenderer>();
             colliders[i] = platformsToEnable[i].GetComponent<BoxCollider2D>();
+            hiddenPlatformAnimators[i] = platformsToEnable[i].GetComponent<Animator>();
         }
 
         PreloadAudio();
@@ -51,7 +58,8 @@ public class TimerPlatform : MonoBehaviour
 
     IEnumerator EnablePlatforms()
     {
-        SetPlatformsActive(true);
+
+        SetPlatformsActive();
 
         audioPlayer.clip = TimerTickingSound;
         audioPlayer.Play();
@@ -60,10 +68,14 @@ public class TimerPlatform : MonoBehaviour
 
         yield return StartCoroutine(ChangePitchOverTime(audioPlayer, 1.0f, 1.5f, 1.5f));
 
-        SetPlatformsActive(false);
+        SetPlatformsInactive();
 
         audioPlayer.Stop();
         audioPlayer.pitch = 1f;
+
+        AudioClip clipToPlay = platformOffSounds;
+        audioPlayer.clip = clipToPlay;
+        audioPlayer.Play();
 
         //Play OFF Animation
         animator.Play(OFF_ANIMATION);
@@ -103,12 +115,20 @@ public class TimerPlatform : MonoBehaviour
         // Restore the original volume
         audioPlayer.volume = originalVolume;
     }
-    void SetPlatformsActive(bool active)
-{
-    foreach (var platform in platformsToEnable)
+    private void SetPlatformsActive()
     {
-        platform.GetComponent<SpriteRenderer>().enabled = active;
-        platform.GetComponent<BoxCollider2D>().enabled = active;
+        foreach (var platform in platformsToEnable)
+        {
+            platform.GetComponent<SpriteRenderer>().enabled = true;
+            platform.GetComponent<BoxCollider2D>().enabled = true;
+            platform.GetComponent<Animator>().Play(HIDDEN_PLATFORM_ON_ANIMATION);    
+        }
     }
-}
+    private void SetPlatformsInactive()
+    {
+        foreach (var platform in platformsToEnable)
+        {
+            platform.GetComponent<Animator>().Play(HIDDEN_PLATFORM_OFF_ANIMATION);
+        }
+    }
 }

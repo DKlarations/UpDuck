@@ -33,7 +33,7 @@ public class BouncyPlatform : MonoBehaviour
                 if (playerController != null)
                 {
                     //Add Bounce
-                    playerController.Bounce(bounceForce);
+                    playerController.VerticalBounce(bounceForce);
 
                     //Play Bounce Animation
                     animator.Play(BOUNCE_ANIMATION);

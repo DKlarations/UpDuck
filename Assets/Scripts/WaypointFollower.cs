@@ -14,7 +14,7 @@ public class WaypointFollower : MonoBehaviour
     {
         SetPreviousXPosition();
     }
-    private void Update()
+    private void FixedUpdate()
     {
         if (Vector2.Distance(waypoints[currentWaypointIndex].transform.position, transform.position) < 0.1f)
         {
