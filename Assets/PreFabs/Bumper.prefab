@@ -135,6 +135,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bumpStrength: 25
+  cooldownTime: 0.25
   audioSource: {fileID: 1138509776067637425}
 --- !u!82 &1138509776067637425
 AudioSource:

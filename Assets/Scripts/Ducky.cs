@@ -40,8 +40,7 @@ public class Ducky : MonoBehaviour
     private bool shouldJump;
     private bool onGround;
     private bool facingRight = true;
-    private bool canInput = true;
-    
+    private bool canInput = true;   
     public float horizontalPush = 0f;
     
     private float airborneTime;
@@ -75,31 +74,17 @@ public class Ducky : MonoBehaviour
 
     void Update()
     {
-        //RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.515f, groundLayer);
-
-        //Old Raycast logic, tying it to a Boolean, returns true if either ray hits groundlayer
-/*         onGround = Physics2D.Raycast(transform.position + raycastOffset, Vector2.down, 0.515f, groundLayer) 
-                || Physics2D.Raycast(transform.position - raycastOffset, Vector2.down, 0.515f, groundLayer);*/
-        Debug.DrawRay(transform.position + raycastOffset, Vector2.down * 0.515f, Color.red);
-        Debug.DrawRay(transform.position - raycastOffset, Vector2.down * 0.515f, Color.red); 
-
-        //Vector2 boxCastSize = new Vector2(1f, 0.1f); // Set the width and height of the box
-        //float castDistance = 0.1f; // How far down we cast our box
-
         // Cast a box downward to check for ground layer
         RaycastHit2D hit = Physics2D.BoxCast(transform.position + boxcastOffset, boxCastSize, 0f, Vector2.down, castDistance, groundLayer);
         onGround = hit.collider != null;
 
 
-        //UpdateMovement();
-
-        // Debugging feature: Fly upwards when 'P' key and 'W' are pressed together.
+        // Debugging feature: Fly upwards when 'P' key and 'I' are pressed together.
         if (Input.GetKey(KeyCode.P) && Input.GetKey(KeyCode.I))
         {
             body.AddForce(Vector2.up * 2f, ForceMode2D.Impulse);
         }
 
-        
         //Landing logic, check for faceplant, check for idle, otherwise Ducky is not on ground.
         if (onGround
         && IsFallingState()
@@ -179,10 +164,6 @@ public class Ducky : MonoBehaviour
         {
             body.velocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
         }
-
-
-        
-        
         
         //Flapping code. 
         if (Input.GetButton("Jump") 
@@ -196,14 +177,15 @@ public class Ducky : MonoBehaviour
 
         //If Jump is released, Release the flap while saving flap time.
          if (Input.GetButtonUp("Jump")
-        && currentState == DuckyState.Flapping
+        && (currentState == DuckyState.Flapping || currentState == DuckyState.Tired)
         && flapDuration < maxFlapDuration)
         {
             currentState = DuckyState.Jumping;
         }
 
         //Go to tired as approaching maxFlapDuration
-        if (flapDuration + 0.5f >= maxFlapDuration)
+        if (Input.GetButton("Jump")
+        && flapDuration + .5f >= maxFlapDuration )
         {
             currentState = DuckyState.Tired;
         }
@@ -211,7 +193,6 @@ public class Ducky : MonoBehaviour
         //Go to Tired Fall if past maxFlapDuration
         if (flapDuration >= maxFlapDuration)
         {
-            Debug.Log("Past max flap duration");
             currentState = DuckyState.TiredFall;
         }
 
@@ -274,7 +255,6 @@ public class Ducky : MonoBehaviour
                 break;
 
             case DuckyState.Tired:
-                Debug.Log("Ducky is Tired");
                 flapDuration += Time.fixedDeltaTime;
                 body.velocity = new Vector2(body.velocity.x, body.velocity.y + flapStrength * Time.fixedDeltaTime);
                 ChangeAnimationState(DUCKY_TIRED);
@@ -293,9 +273,7 @@ public class Ducky : MonoBehaviour
                 ChangeAnimationState(DUCKY_IDLE);
                 OnLanding();
                 break;
-        }
-
-        
+        } 
     }
     void ChangeAnimationState(string newAnimation)
     {
@@ -368,7 +346,6 @@ public class Ducky : MonoBehaviour
 
     public void OnLanding()
     {
-        Debug.Log("Landed");
         cameraFollow.AdjustCameraForJump(!onGround);
         flapDuration = 0.0f; // Reset flapDuration to maximum
         airborneTime = 0f;   // Reset airborneTime to Zero
@@ -434,7 +411,6 @@ public class Ducky : MonoBehaviour
 
     IEnumerator InputDelayCoroutine()
     {
-        
         //disable further Input
         canInput = false;
 
@@ -481,8 +457,6 @@ public class Ducky : MonoBehaviour
         if (jumpBufferCounter > 0f)
         { 
             totalForce += jumpSpeed;
-            
-            Debug.Log("Should be Super Jump");
         }
         body.velocity = new Vector2(body.velocity.x, 0);  // Reset vertical velocity
         body.AddForce(new Vector2(0, totalForce), ForceMode2D.Impulse);  // Apply combined force
