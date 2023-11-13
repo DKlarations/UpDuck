@@ -15,6 +15,8 @@ public class Ducky : MonoBehaviour
     enum DuckyState { Idle, Walking, Running, Jumping, Flapping, Rolling, Falling, Tired, TiredFall, Dead } // The state machine variable
     private DuckyState currentState = DuckyState.Idle;
     private CinemachineImpulseSource impulseSource;
+    public UI_StatusIndicator status;
+
     [Header("Audio")]
     public AudioSource audioPlayer;
     public AudioClip[] jumpSounds;
@@ -122,9 +124,9 @@ public class Ducky : MonoBehaviour
             PlayRandomSound(impactSounds);
         }
         else if (onGround
-        && body.velocity.y <= yVelocityBuffer
-        && body.velocity.y >= -yVelocityBuffer
-        && currentState != DuckyState.Dead)  
+/*         && body.velocity.y <= yVelocityBuffer
+        && body.velocity.y >= -yVelocityBuffer */
+        && currentState != DuckyState.Dead)
         {
             OnLanding();
             currentState = DuckyState.Idle;
@@ -162,6 +164,23 @@ public class Ducky : MonoBehaviour
 
         //Jump Buffer Logic.  
         UpdateJumpBuffer();
+
+        //debugging seesaws:
+        if (Input.GetButton("Jump"))
+        {
+           Debug.Log("jumpBufferCounter:" + jumpBufferCounter + "\n" + 
+                     "canInput:" + canInput + "\n" + 
+                     "onGround:" + onGround + "\n" +
+                     "airborneTime:" + airborneTime + "\n" +
+                     "coyoteTime:" + coyoteTime + "\n" + 
+                     "shouldJump:" + shouldJump + "\n" + 
+                     "all together:" + (
+                        jumpBufferCounter >= 0f 
+                        && canInput 
+                        && onGround 
+                        && airborneTime <= coyoteTime 
+                        && shouldJump));
+        }
 
         //Jump Logic
         HandleJump();
@@ -242,6 +261,9 @@ public class Ducky : MonoBehaviour
     {
         UpdateMovement();
 
+
+        status.LabelTheDuck(currentState.ToString());
+        
         // Handle state-specific logic
         switch (currentState)
         {
@@ -280,7 +302,6 @@ public class Ducky : MonoBehaviour
 
             case DuckyState.Dead:
                 ChangeAnimationState(DUCKY_DEAD);
-
                 break;
 
             default:
@@ -441,6 +462,12 @@ public class Ducky : MonoBehaviour
         Vector3 currentScale = gameObject.transform.localScale;
         currentScale.x *= -1;
         gameObject.transform.localScale = currentScale;
+
+        //flip the status readout of the ducky
+        Vector3 statusScale = status.transform.localScale;
+        statusScale.x *= -1;  
+        status.transform.localScale = statusScale;
+
         facingRight = !facingRight;
 
         if (cameraFollow != null)

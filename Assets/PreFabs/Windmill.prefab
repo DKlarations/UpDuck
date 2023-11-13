@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3393259700463012003}
   - component: {fileID: 9166390256237270608}
   - component: {fileID: 2011705362300644938}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: WindmillEvenClosed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
