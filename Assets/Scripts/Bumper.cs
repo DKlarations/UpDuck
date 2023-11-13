@@ -22,7 +22,6 @@ public class Bumper : MonoBehaviour
                 
                 // Get the normal of the contact point
                 Vector2 contactNormal = collision.GetContact(0).normal;
-                Debug.Log("Collision Detected at " + contactNormal);
 
                 // Apply the bump force
                 //playerController.BumperBounce(bumpStrength,contactNormal);

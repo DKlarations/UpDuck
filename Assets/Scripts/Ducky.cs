@@ -1,4 +1,4 @@
-using System.Collections;
+ using System.Collections;
 using System.Collections.Generic;
 using Cinemachine;
 using Unity.VisualScripting;
@@ -124,8 +124,8 @@ public class Ducky : MonoBehaviour
             PlayRandomSound(impactSounds);
         }
         else if (onGround
-/*         && body.velocity.y <= yVelocityBuffer
-        && body.velocity.y >= -yVelocityBuffer */
+        && body.velocity.y <= yVelocityBuffer
+        && body.velocity.y >= -yVelocityBuffer
         && currentState != DuckyState.Dead)
         {
             OnLanding();
@@ -138,7 +138,7 @@ public class Ducky : MonoBehaviour
             airborneTime += Time.deltaTime;
             currentState = DuckyState.Jumping;  //Swap to jumping animation if descending
         }
-        else
+        else if (!onGround)
         {
             airborneTime += Time.deltaTime;
         }
@@ -165,10 +165,11 @@ public class Ducky : MonoBehaviour
         //Jump Buffer Logic.  
         UpdateJumpBuffer();
 
-        //debugging seesaws:
-        if (Input.GetButton("Jump"))
+        //Debugging Jumping:
+        /* if (Input.GetButton("Jump"))
         {
-           Debug.Log("jumpBufferCounter:" + jumpBufferCounter + "\n" + 
+           Debug.Log("Y Velocity: " + body.velocity.y  + "\n" + 
+                     "jumpBufferCounter:" + jumpBufferCounter + "\n" + 
                      "canInput:" + canInput + "\n" + 
                      "onGround:" + onGround + "\n" +
                      "airborneTime:" + airborneTime + "\n" +
@@ -180,7 +181,7 @@ public class Ducky : MonoBehaviour
                         && onGround 
                         && airborneTime <= coyoteTime 
                         && shouldJump));
-        }
+        } */
 
         //Jump Logic
         HandleJump();
