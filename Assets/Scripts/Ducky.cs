@@ -4,8 +4,14 @@ using Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+[SelectionBase]
 public class Ducky : MonoBehaviour
 {
+
     enum DuckyState { Idle, Walking, Running, Jumping, Flapping, Rolling, Falling, Tired, TiredFall, Dead } // The state machine variable
     private DuckyState currentState = DuckyState.Idle;
     private CinemachineImpulseSource impulseSource;
@@ -64,6 +70,13 @@ public class Ducky : MonoBehaviour
     const string DUCKY_WALK = "Ducky Walk";
     const string DUCKY_RUN = "Ducky Run";
 
+    #if UNITY_EDITOR
+    [UnityEditor.MenuItem("DuckStuff/MoveDuck #d")]
+    public static void MoveDuck()
+    {
+        Selection.activeGameObject = GameObject.FindObjectOfType<Ducky>().gameObject;
+    }
+    #endif
 
     void Awake()
     {
@@ -82,7 +95,8 @@ public class Ducky : MonoBehaviour
         // Debugging feature: Fly upwards when 'P' key and 'I' are pressed together.
         if (Input.GetKey(KeyCode.P) && Input.GetKey(KeyCode.I))
         {
-            body.AddForce(Vector2.up * 2f, ForceMode2D.Impulse);
+            body.AddForce(Vector2.up * 1f, ForceMode2D.Impulse);
+            OnLanding();
         }
 
         //Landing logic, check for faceplant, check for idle, otherwise Ducky is not on ground.
