@@ -136,6 +136,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pushForce: 25
+  cooldownTime: 0.2
   audioPlayer: {fileID: 4713281965791222688}
   boingSound: {fileID: 8300000, guid: f16ebe9cd0dda764f87ca03aa0dc3554, type: 3}
 --- !u!61 &1814873233132706020
@@ -192,7 +193,7 @@ AudioSource:
   m_GameObject: {fileID: 2566007620662304802}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: -3920580174250804238, guid: 746b95e393c30544c935b26695360589, type: 2}
   m_audioClip: {fileID: 8300000, guid: f16ebe9cd0dda764f87ca03aa0dc3554, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 0.5
