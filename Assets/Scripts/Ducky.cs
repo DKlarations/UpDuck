@@ -73,7 +73,7 @@ public class Ducky : MonoBehaviour
     const string DUCKY_RUN = "Ducky Run";
 
     #if UNITY_EDITOR
-    [UnityEditor.MenuItem("DuckStuff/MoveDuck #d")]
+    [UnityEditor.MenuItem("DuckStuff/SelectDuck #d")]
     public static void MoveDuck()
     {
         Selection.activeGameObject = GameObject.FindObjectOfType<Ducky>().gameObject;
@@ -143,9 +143,11 @@ public class Ducky : MonoBehaviour
             airborneTime += Time.deltaTime;
         }
 
-        //If moving on ground play walking animation
+        //If moving on ground play Running or Walking animation
         if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0 
-        && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+        && (Input.GetKey(KeyCode.LeftShift) 
+        || Input.GetKey(KeyCode.RightShift)
+        || Input.GetButton("Fire3"))
         && onGround 
         && canInput 
         && currentState != DuckyState.Jumping) 
@@ -332,7 +334,9 @@ public class Ducky : MonoBehaviour
         pushCooldownTimer -= Time.deltaTime;
 
         // Check if shift key is held down to increase speed
-        if (onGround && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+        if (onGround && (Input.GetKey(KeyCode.LeftShift) 
+        || Input.GetKey(KeyCode.RightShift)
+        || Input.GetButton("Fire3")))
         {
             speedMultiplier = 1.5f;
         }
