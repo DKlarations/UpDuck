@@ -32,15 +32,32 @@ public class GameTimer : MonoBehaviour
             float timeElapsed = Time.time - startTime;
             timerText.text = FormatTime(timeElapsed);
         }
+
+        //Debug feature to increase the timer's time
+        #if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            startTime -= 600f;
+        }
+        #endif
     }
 
     string FormatTime(float timeInSeconds)
     {
-        int minutes = (int)(timeInSeconds / 60);
+        int hours = (int)(timeInSeconds / 3600);
+        int minutes = (int)((timeInSeconds % 3600) / 60);
         int seconds = (int)(timeInSeconds % 60);
-        int milliseconds = (int)((timeInSeconds - (int)timeInSeconds) * 100); // Changed to 100 for two digits
+        int milliseconds = (int)((timeInSeconds - (int)timeInSeconds) * 100); // Two digits
 
-        return $"{minutes:00}:{seconds:00}:{milliseconds:00}";
+        if (hours > 0)
+        {
+            return $"{hours}:{minutes:00}:{seconds:00}:{milliseconds:00}";
+        }
+        else
+        {
+            return $"{minutes:00}:{seconds:00}:{milliseconds:00}";
+        }
     }
+
 
 }

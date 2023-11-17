@@ -17,7 +17,7 @@ public class DuckyMoverTool : EditorWindow
         if (toolActive)
         {
             SceneView.duringSceneGui += OnSceneGUI;
-            ducky = GameObject.FindObjectOfType<Ducky>()?.gameObject;
+            ducky = Object.FindFirstObjectByType<Ducky>()?.gameObject;
             if (ducky == null)
             {
                 Debug.LogError("Ducky not found in the scene!");

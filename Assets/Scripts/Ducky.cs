@@ -76,7 +76,8 @@ public class Ducky : MonoBehaviour
     [UnityEditor.MenuItem("DuckStuff/SelectDuck #d")]
     public static void MoveDuck()
     {
-        Selection.activeGameObject = GameObject.FindObjectOfType<Ducky>().gameObject;
+     //   Selection.activeGameObject = GameObject.FindObjectOfType<Ducky>().gameObject;
+        Selection.activeGameObject = GameObject.FindFirstObjectByType<Ducky>().gameObject;
     }
     #endif
 
@@ -92,7 +93,6 @@ public class Ducky : MonoBehaviour
         // Cast a box downward to check for ground layer
         RaycastHit2D hit = Physics2D.BoxCast(transform.position + boxcastOffset, boxCastSize, 0f, Vector2.down, castDistance, groundLayer);
         onGround = hit.collider != null;
-
 
         // Debugging feature: Fly upwards when 'P' key and 'I' are pressed together.
         if (Input.GetKey(KeyCode.P) && Input.GetKey(KeyCode.I))
@@ -180,7 +180,6 @@ public class Ducky : MonoBehaviour
                      "all together:" + (
                         jumpBufferCounter >= 0f 
                         && canInput 
-                        && onGround 
                         && airborneTime <= coyoteTime 
                         && shouldJump));
         } */
@@ -408,7 +407,7 @@ public class Ducky : MonoBehaviour
         // Jump Logic
         if (jumpBufferCounter > 0f 
         && canInput 
-        && onGround 
+        /* && onGround  */   //I think having this on essentially turned off coyote
         && airborneTime <= coyoteTime 
         && shouldJump)
         { 
@@ -431,18 +430,29 @@ public class Ducky : MonoBehaviour
             jumpBufferCounter = 0f;
         }
     }
-
     private bool IsFallingState() 
     {
         return currentState == DuckyState.Falling || currentState == DuckyState.TiredFall;
     }
-    private void PlayRandomSound(AudioClip[] clips) 
+
+    private AudioClip lastPlayedClip;
+    private void PlayRandomSound(AudioClip[] clips)
     {
         if (clips.Length == 0) return;
-        AudioClip clipToPlay = clips[Random.Range(0, clips.Length)];
+
+        AudioClip clipToPlay;
+        do
+        {
+            clipToPlay = clips[Random.Range(0, clips.Length)];
+        } 
+        while (clipToPlay == lastPlayedClip && clips.Length > 1); // Ensure there's an alternative clip to choose
+
+        lastPlayedClip = clipToPlay; // Remember the last played clip
+
         audioPlayer.clip = clipToPlay;
         audioPlayer.Play();
     }
+
     public void FacePlant()
     {
         CameraShakeManager.instance.CameraShake(impulseSource);
@@ -498,10 +508,10 @@ public class Ducky : MonoBehaviour
         
         float totalForce = bounceForce;
 
-        bounceDust.Play(); //Create Bounce Particles
+        bounceDust.Play();  // Create Bounce Particles
 
-        if (jumpBufferCounter > 0f)
-        { 
+        if (jumpBufferCounter > -jumpBufferTime)
+        {
             totalForce += jumpSpeed;
         }
         body.velocity = new Vector2(body.velocity.x, 0);  // Reset vertical velocity

@@ -58,43 +58,47 @@ public class TimerPlatform : MonoBehaviour
 
     IEnumerator EnablePlatforms()
     {
-
         SetPlatformsActive();
 
         audioPlayer.clip = TimerTickingSound;
         audioPlayer.Play();
 
-        yield return new WaitForSeconds(platformsEnabledTime - 1.5f); 
+        float interval = platformsEnabledTime / 8f;
+        float elapsedTime = 0f;
+        int currentInterval = 8;  // Start from the last animation
 
-        yield return StartCoroutine(ChangePitchOverTime(audioPlayer, 1.0f, 1.5f, 1.5f));
+        while (elapsedTime < platformsEnabledTime)
+        {
+            elapsedTime += Time.deltaTime;
+
+            // Trigger animations in reverse order
+            if (elapsedTime >= interval * (8 - currentInterval))
+            {
+                animator.Play(ON_ANIMATION + currentInterval.ToString());
+                currentInterval--;
+            }
+
+            // Pitch change logic (adjust as needed)
+            if (elapsedTime >= platformsEnabledTime - 1.5f)
+            {
+                // Adjust the pitch over the last 1.5 seconds
+                audioPlayer.pitch = Mathf.Lerp(1.0f, 1.5f, (elapsedTime - (platformsEnabledTime - 1.5f)) / 1.5f);
+            }
+
+            yield return null;
+        }
 
         SetPlatformsInactive();
 
         audioPlayer.Stop();
-        audioPlayer.pitch = 1f;
+        audioPlayer.pitch = 1f; // Reset pitch
 
-        AudioClip clipToPlay = platformOffSounds;
-        audioPlayer.clip = clipToPlay;
-        audioPlayer.Play();
+        audioPlayer.PlayOneShot(platformOffSounds);
 
-        //Play OFF Animation
+        // Play OFF Animation
         animator.Play(OFF_ANIMATION);
 
         platformsAreOn = false;
-    }
-    IEnumerator ChangePitchOverTime(AudioSource audioSource, float startPitch, float endPitch, float duration)
-    {
-        float currentTime = 0;
-
-        while (currentTime < duration)
-        {
-            currentTime += Time.deltaTime;
-            float newPitch = Mathf.Lerp(startPitch, endPitch, currentTime / duration);
-            audioSource.pitch = newPitch;
-            yield return null; // Wait for the next frame
-        }
-
-        audioSource.pitch = endPitch; 
     }
     private void PreloadAudio()
     {
@@ -131,4 +135,10 @@ public class TimerPlatform : MonoBehaviour
             platform.GetComponent<Animator>().Play(HIDDEN_PLATFORM_OFF_ANIMATION);
         }
     }
+    void TriggerAnimationAtInterval(int intervalIndex)
+    {
+        // Trigger the appropriate animation based on the interval index
+        // This is where you'll decide how to trigger the correct animation
+        // Example: animator.Play("AnimationState_" + intervalIndex);
+    } 
 }
