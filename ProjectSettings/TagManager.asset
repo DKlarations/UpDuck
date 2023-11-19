@@ -4,7 +4,11 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - IcePlatform
+  - Metal
+  - Wood
+  - Ground
+  - Ice
+  - Grass
   layers:
   - Default
   - TransparentFX

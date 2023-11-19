@@ -23,6 +23,21 @@ public class Ducky : MonoBehaviour
     public AudioSource audioPlayer;
     public AudioClip[] jumpSounds;
     public AudioClip[] impactSounds;
+
+    public AudioSource footstepsAudioSource;
+    public List<AudioClip> GroundFootSteps;
+    public List<AudioClip> GrassFootSteps;
+    public List<AudioClip> MetalFootSteps;
+    public List<AudioClip> WoodFootSteps;
+    public List<AudioClip> IceFootSteps;
+    private float footstepDelay = 0.3f; // Delay between footsteps, adjust based on movement speed
+    private float footstepTimer;
+    enum groundMaterial
+    {
+        Ground, Grass, Metal, Wood, Ice, Empty
+    }
+    private groundMaterial footStepMaterial = groundMaterial.Empty;
+
     [Header("Animation")]
     public CameraFollow cameraFollow;
     public Animator animator;
@@ -95,6 +110,9 @@ public class Ducky : MonoBehaviour
         RaycastHit2D hit = Physics2D.BoxCast(transform.position + boxCastOffset, boxCastSize, 0f, Vector2.down, castDistance, groundLayer);
         onGround = hit.collider != null;
 
+        //Change what the ground material is:
+        ChangeGroundMaterial(hit);
+
         //Landing logic, check for faceplant, check for idle, otherwise Ducky is not on ground.
         if (onGround
         && IsFallingState()
@@ -122,6 +140,10 @@ public class Ducky : MonoBehaviour
         && body.velocity.y >= -yVelocityBuffer
         && currentState != DuckyState.Dead)
         {
+            if (shouldJump == false)
+            {
+                HandleFootstepSounds();
+            }
             OnLanding();
             currentState = DuckyState.Idle;
         } 
@@ -156,6 +178,9 @@ public class Ducky : MonoBehaviour
         {
             currentState = DuckyState.Walking;
         }
+
+
+
 
 
         //Jump Buffer Logic.  
@@ -358,6 +383,9 @@ public class Ducky : MonoBehaviour
         {
             FlipCharacter();
         }
+
+        //Play Footsteps
+        //HandleFootstepSounds();
     }
     public void ApplyPushForce(Vector2 force, float cooldownTime)
     {
@@ -453,7 +481,60 @@ public class Ducky : MonoBehaviour
         audioPlayer.clip = clipToPlay;
         audioPlayer.Play();
     }
+    private AudioClip lastPlayedFootstep;
+    private void PlayRandomFootstep(List<AudioClip> footstepClips)
+    {
+        if (footstepClips == null || footstepClips.Count == 0) return;
 
+        AudioClip clipToPlay;
+        do
+        {
+            clipToPlay = footstepClips[Random.Range(0, footstepClips.Count)];
+        } 
+        while (clipToPlay == lastPlayedClip && footstepClips.Count > 1); // Ensure there's an alternative clip to choose
+
+        lastPlayedFootstep = clipToPlay; // Remember the last played clip
+
+        footstepsAudioSource.clip = clipToPlay;
+        footstepsAudioSource.pitch = Random.Range(0.8f, 1.2f);
+        //footstepsAudioSource.Play();
+        footstepsAudioSource.PlayOneShot(clipToPlay);
+    }
+    private void HandleFootstepSounds()
+    {
+/*         if (onGround && (currentState == DuckyState.Walking || currentState == DuckyState.Running))
+        {
+            footstepTimer -= Time.deltaTime;
+            if (footstepTimer <= 0)
+            {
+                SelectAndPlayFootstepSound();
+                footstepTimer = footstepDelay / (currentState == DuckyState.Running ? 1.5f : 1f); // Adjust the timer based on running or walking
+            }
+        } */
+        if (onGround)
+        {
+            SelectAndPlayFootstepSound();
+        }
+    }
+    private void SelectAndPlayFootstepSound()
+    {
+        if (!onGround) return;
+
+        List<AudioClip> selectedFootstepSounds = null;
+        selectedFootstepSounds = footStepMaterial switch
+        {
+            groundMaterial.Ground => GroundFootSteps,
+            groundMaterial.Grass => GrassFootSteps,
+            groundMaterial.Metal => MetalFootSteps,
+            groundMaterial.Wood => WoodFootSteps,
+            groundMaterial.Ice => IceFootSteps,
+            _ => GroundFootSteps,
+        };
+        if (selectedFootstepSounds != null)
+        {
+            PlayRandomFootstep(selectedFootstepSounds);
+        }
+    }
     public void FacePlant()
     {
         CameraShakeManager.instance.CameraShake(impulseSource);
@@ -521,6 +602,40 @@ public class Ducky : MonoBehaviour
         jumpBufferCounter = 0f;
     }
     
+    public void ChangeGroundMaterial(RaycastHit2D hit)
+    {
+        if (hit.collider != null)
+        {
+            // Check the tag of the collider
+            switch (hit.collider.tag)
+            {
+                case "Ground":
+                    footStepMaterial = groundMaterial.Ground;
+                    break;
+                case "Grass":
+                    footStepMaterial = groundMaterial.Grass;
+                    break;
+                case "Metal":
+                    footStepMaterial = groundMaterial.Metal;
+                    break;
+                case "Wood":
+                    footStepMaterial = groundMaterial.Wood;
+                    break;
+                case "Ice":
+                    footStepMaterial = groundMaterial.Ice;
+                    break;
+                default:
+                    footStepMaterial = groundMaterial.Empty;
+                    break;
+            }
+        }
+        else
+        {
+            // No ground detected
+            footStepMaterial = groundMaterial.Empty;
+        }
+    }
+
     private void OnDrawGizmos()
     {
         // GROUND BOX CAST

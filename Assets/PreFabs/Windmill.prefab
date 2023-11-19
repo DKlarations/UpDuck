@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 2011705362300644938}
   m_Layer: 3
   m_Name: WindmillEvenClosed
-  m_TagString: Untagged
+  m_TagString: Wood
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -238,7 +238,7 @@ GameObject:
   - component: {fileID: 6635261127627170645}
   m_Layer: 0
   m_Name: Windmill
-  m_TagString: Untagged
+  m_TagString: Wood
   m_Icon: {fileID: -5938655980376293919, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
