@@ -30,7 +30,6 @@ public class CheckpointManager : MonoBehaviour
         {
             if (newSprite != null && spriteRenderer != null)
             {   
-                Debug.Log("Sprite Changed");
                 spriteRenderer.sprite = newSprite; // Change the sprite                
             }
             

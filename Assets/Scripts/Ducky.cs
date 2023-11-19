@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
+using System.Runtime.CompilerServices;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -12,7 +14,7 @@ using UnityEditor;
 public class Ducky : MonoBehaviour
 {
 
-    enum DuckyState { Idle, Walking, Running, Jumping, Flapping, Rolling, Falling, Tired, TiredFall, Dead } // The state machine variable
+    enum DuckyState { Idle, Walking, Running, Jumping, Flapping, WallSlide, Falling, Tired, TiredFall, Dead } // The state machine variable
     private DuckyState currentState = DuckyState.Idle;
     private CinemachineImpulseSource impulseSource;
     public UI_StatusIndicator status;
@@ -54,8 +56,7 @@ public class Ducky : MonoBehaviour
     private float airborneTime;
     [SerializeField] private float deadThreshold = 1f;
     [Header("Ground Detection")]
-    public Vector3 raycastOffset;
-    public Vector3 boxcastOffset;
+    public Vector3 boxCastOffset;
     public Vector2 boxCastSize;
     public float castDistance;
     
@@ -91,15 +92,8 @@ public class Ducky : MonoBehaviour
     void Update()
     {
         // Cast a box downward to check for ground layer
-        RaycastHit2D hit = Physics2D.BoxCast(transform.position + boxcastOffset, boxCastSize, 0f, Vector2.down, castDistance, groundLayer);
+        RaycastHit2D hit = Physics2D.BoxCast(transform.position + boxCastOffset, boxCastSize, 0f, Vector2.down, castDistance, groundLayer);
         onGround = hit.collider != null;
-
-        // Debugging feature: Fly upwards when 'P' key and 'I' are pressed together.
-        if (Input.GetKey(KeyCode.P) && Input.GetKey(KeyCode.I))
-        {
-            body.AddForce(Vector2.up * 1f, ForceMode2D.Impulse);
-            OnLanding();
-        }
 
         //Landing logic, check for faceplant, check for idle, otherwise Ducky is not on ground.
         if (onGround
@@ -262,6 +256,13 @@ public class Ducky : MonoBehaviour
     void FixedUpdate()
     {
         UpdateMovement();
+
+        // Debugging feature: Fly upwards when 'P' key and 'I' are pressed together.
+        if (Input.GetKey(KeyCode.P) && Input.GetKey(KeyCode.I))
+        {
+            body.AddForce(Vector2.up * 1f, ForceMode2D.Impulse);
+            OnLanding();
+        }
 
 
         status.LabelTheDuck(currentState.ToString());
@@ -522,8 +523,9 @@ public class Ducky : MonoBehaviour
     
     private void OnDrawGizmos()
     {
+        // GROUND BOX CAST
         // The center of the box cast, slightly above the player to ensure it starts inside the player collider
-        Vector2 castOrigin = (Vector2)transform.position + (Vector2)boxcastOffset + Vector2.up * 0.05f;
+        Vector2 castOrigin = (Vector2)transform.position + (Vector2)boxCastOffset + Vector2.up * 0.05f;
 
         // Calculate the four corners of the box
         Vector2 bottomLeft = castOrigin + new Vector2(-boxCastSize.x / 2, -boxCastSize.y / 2 - castDistance);
@@ -531,11 +533,14 @@ public class Ducky : MonoBehaviour
         Vector2 topLeft = castOrigin + new Vector2(-boxCastSize.x / 2, boxCastSize.y / 2);
         Vector2 topRight = castOrigin + new Vector2(boxCastSize.x / 2, boxCastSize.y / 2);
 
+        Color boxColor = onGround ? Color.green : Color.red;
+
         // Draw the box using Debug.DrawLine
-        Debug.DrawLine(bottomLeft, bottomRight, Color.red); // Bottom
-        Debug.DrawLine(topLeft, topRight, Color.red);       // Top
-        Debug.DrawLine(bottomLeft, topLeft, Color.red);     // Left
-        Debug.DrawLine(bottomRight, topRight, Color.red);   // Right
+        Debug.DrawLine(bottomLeft, bottomRight, boxColor); // Bottom
+        Debug.DrawLine(topLeft, topRight, boxColor);       // Top
+        Debug.DrawLine(bottomLeft, topLeft, boxColor);     // Left
+        Debug.DrawLine(bottomRight, topRight, boxColor);   // Right
+
     }
 
     

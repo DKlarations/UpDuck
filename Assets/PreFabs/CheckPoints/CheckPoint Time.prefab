@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: CheckPoint # 00:00:00:00
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: f3ac58bebb560b2428b0b91217b7422b, type: 2}
-  m_sharedMaterial: {fileID: -2369172909787730301, guid: f3ac58bebb560b2428b0b91217b7422b, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: bb67f8143bb3c1544b907102364c9ff8, type: 2}
+  m_sharedMaterial: {fileID: 590048617797053966, guid: bb67f8143bb3c1544b907102364c9ff8, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
