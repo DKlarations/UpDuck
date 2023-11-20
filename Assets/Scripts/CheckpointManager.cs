@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using TMPro;
 
@@ -15,42 +16,96 @@ public class CheckpointManager : MonoBehaviour
     public ParticleSystem checkpointParticles;
     public AudioSource checkpointAudio;
     public int checkpointID;
+    private static bool checkpointTimesLoaded = false;
     private List<float> checkpointTimes = new List<float>();
 
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        startTime = Time.time;
+        
         StartTimer();
+        if (!checkpointTimesLoaded)
+        {
+            ReloadAndDisplayCheckpointTimes();
+            checkpointTimesLoaded = true; 
+        }
+
+        if (PlayerPrefs.HasKey(GetPrefsKey()))
+        {
+            DisableCheckpoint();
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collider)
     {
         if (collider.gameObject.CompareTag("Player") && isTimerRunning)
         {
-            if (newSprite != null && spriteRenderer != null)
+            DisableCheckpoint();
+            PlayCheckpointParticles();
+            PlayCheckpointAudio();
+            RecordCheckpointTime();
+        }           
+    }
+    private static string GetPrefsKey(int checkpointID){return $"checkpoint_{checkpointID}";}
+    private string GetPrefsKey(){return CheckpointManager.GetPrefsKey(this.checkpointID);}
+
+    private void DisableCheckpoint()
+    {
+        if (newSprite != null && spriteRenderer != null)
             {   
                 spriteRenderer.sprite = newSprite; // Change the sprite                
             }
-            
-            PlayCheckpointParticles();
-            PlayCheckpointAudio();
-
-            RecordCheckpointTime();
             GetComponent<Collider2D>().enabled = false;
-        }           
     }
-
     public void RecordCheckpointTime()
     {
         float checkpointTime = Time.time - startTime;
         
-        TextMeshProUGUI newCheckpointTimer = Instantiate(checkpointTimerPrefab, checkpointTimerContainer);
-        newCheckpointTimer.text = "Checkpoint " + checkpointID + ": " + FormatTime(checkpointTime);
+        InstantiateAndPositionCheckpointTimer(checkpointID, checkpointTime);
 
+        //Save the checkpoint time in Player Prefs
+        PlayerPrefs.SetFloat(GetPrefsKey(checkpointID), checkpointTime);
+    }
+
+    private void ReloadAndDisplayCheckpointTimes()
+    {
+        if (checkpointTimesLoaded) 
+        {
+            return;
+        }
+        // Dictionary to store checkpoint times and their IDs
+        var checkpointTimes = new Dictionary<int, float>();
+
+        // Assuming you have a known maximum number of checkpoints
+        int maxCheckpoints = 4; // Adjust this to your actual maximum number of checkpoints
+
+        // Load the times for all checkpoints
+        for (int i = 1; i <= maxCheckpoints; i++)
+        {
+            float time = PlayerPrefs.GetFloat(GetPrefsKey(i), -1f);
+            if (time >= 0f)
+            {
+                checkpointTimes.TryAdd(i, time);
+            }
+        }
+
+        // Sort the checkpoints by their times in ascending order
+        var sortedCheckpointTimes = checkpointTimes.OrderBy(kvp => kvp.Value);
+
+        // Display the sorted checkpoint times
+        foreach (var checkpoint in sortedCheckpointTimes)
+        {
+            InstantiateAndPositionCheckpointTimer(checkpoint.Key, checkpoint.Value);
+        }
+    }
+
+    private void InstantiateAndPositionCheckpointTimer(int checkpointID, float time)
+    {
+        TextMeshProUGUI newCheckpointTimer = Instantiate(checkpointTimerPrefab, checkpointTimerContainer);
+        newCheckpointTimer.text = "Checkpoint " + checkpointID + ": " + FormatTime(time);
+        
         // Position the new timer in the UI
-        // Calculate the position based on the number of children in checkpointTimerContainer
-        float checkpointUIVerticalSpacing = 20f; // Adjust as needed
+        float checkpointUIVerticalSpacing = 20f; 
         Vector3 newPosition = new Vector3(0, -checkpointTimerContainer.childCount * checkpointUIVerticalSpacing, 0);
         newCheckpointTimer.transform.localPosition = newPosition;
     }
@@ -93,12 +148,16 @@ public class CheckpointManager : MonoBehaviour
     }
     public static void StartTimer()
     {
-        startTime = Time.time;
+        startTime = Time.time - PlayerPrefs.GetFloat("TimeElapsed");
         isTimerRunning = true;
     }
 
     public static void StopTimer()
     {
         isTimerRunning = false;
+    }
+    public static void ResetCheckpointTimesLoaded()
+    {
+        checkpointTimesLoaded = false;
     }
 }

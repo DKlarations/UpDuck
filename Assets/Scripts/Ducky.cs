@@ -1,9 +1,9 @@
- using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using Cinemachine;
-using Unity.VisualScripting;
 using UnityEngine;
-using System.Runtime.CompilerServices;
+using UnityEngine.SceneManagement;
+
 
 
 #if UNITY_EDITOR
@@ -102,6 +102,10 @@ public class Ducky : MonoBehaviour
         body = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         impulseSource = GetComponent<CinemachineImpulseSource>();
+
+
+        transform.position = new Vector3 (PlayerPrefs.GetFloat("PlayerXLocation"), PlayerPrefs.GetFloat("PlayerYLocation"), 0);
+
     }
 
     void Update()
@@ -269,10 +273,17 @@ public class Ducky : MonoBehaviour
         {
             cameraFollow.AdjustCameraForJump(!onGround);
         }
+        if(body.velocity.y > deadThreshold)
+        {
+            cameraFollow.AdjustCameraForFall(currentState == DuckyState.Falling);
+        }
         
         //Exit the program with Escape
         if (Input.GetKey(KeyCode.Escape))
         {
+            SceneManager.LoadScene("Menu");
+            PlayerPrefs.SetFloat("PlayerXLocation", transform.position.x);
+            PlayerPrefs.SetFloat("PlayerYLocation", transform.position.y);
             Application.Quit();
         }
        
@@ -415,6 +426,7 @@ public class Ducky : MonoBehaviour
     public void OnLanding()
     {
         cameraFollow.AdjustCameraForJump(!onGround);
+        cameraFollow.AdjustCameraForFall(!onGround);
         flapDuration = 0.0f; // Reset flapDuration to maximum
         airborneTime = 0f;   // Reset airborneTime to Zero
         shouldJump = true;   // Reset the Should Jump Flag
@@ -496,21 +508,12 @@ public class Ducky : MonoBehaviour
         lastPlayedFootstep = clipToPlay; // Remember the last played clip
 
         footstepsAudioSource.clip = clipToPlay;
-        footstepsAudioSource.pitch = Random.Range(0.8f, 1.2f);
+        footstepsAudioSource.pitch = Random.Range(0.9f, 1.1f);
         //footstepsAudioSource.Play();
         footstepsAudioSource.PlayOneShot(clipToPlay);
     }
     private void HandleFootstepSounds()
     {
-/*         if (onGround && (currentState == DuckyState.Walking || currentState == DuckyState.Running))
-        {
-            footstepTimer -= Time.deltaTime;
-            if (footstepTimer <= 0)
-            {
-                SelectAndPlayFootstepSound();
-                footstepTimer = footstepDelay / (currentState == DuckyState.Running ? 1.5f : 1f); // Adjust the timer based on running or walking
-            }
-        } */
         if (onGround)
         {
             SelectAndPlayFootstepSound();
@@ -607,27 +610,15 @@ public class Ducky : MonoBehaviour
         if (hit.collider != null)
         {
             // Check the tag of the collider
-            switch (hit.collider.tag)
+            footStepMaterial = hit.collider.tag switch
             {
-                case "Ground":
-                    footStepMaterial = groundMaterial.Ground;
-                    break;
-                case "Grass":
-                    footStepMaterial = groundMaterial.Grass;
-                    break;
-                case "Metal":
-                    footStepMaterial = groundMaterial.Metal;
-                    break;
-                case "Wood":
-                    footStepMaterial = groundMaterial.Wood;
-                    break;
-                case "Ice":
-                    footStepMaterial = groundMaterial.Ice;
-                    break;
-                default:
-                    footStepMaterial = groundMaterial.Empty;
-                    break;
-            }
+                "Ground" => groundMaterial.Ground,
+                "Grass" => groundMaterial.Grass,
+                "Metal" => groundMaterial.Metal,
+                "Wood" => groundMaterial.Wood,
+                "Ice" => groundMaterial.Ice,
+                _ => groundMaterial.Empty,
+            };
         }
         else
         {

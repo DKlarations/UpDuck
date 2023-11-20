@@ -81,7 +81,15 @@ AudioMixerController:
   m_SuspendThreshold: -80
   m_EnableSuspend: 1
   m_UpdateMode: 0
-  m_ExposedParameters: []
+  m_ExposedParameters:
+  - guid: 2a7272ceb949c7546aa0529c65d5e21e
+    name: Ambient
+  - guid: 6239d842b9815d645b32a80fc2315fd9
+    name: Music
+  - guid: 8746ab1965f7e5c428c6392297377ad2
+    name: Master
+  - guid: 8390b428e65f6ce4b8ccb183a222ae42
+    name: Sfx
   m_AudioMixerGroupViews:
   - guids:
     - d3743c11c4f961148a6b65df96ce0b1b
@@ -137,7 +145,8 @@ AudioMixerSnapshotController:
   m_AudioMixer: {fileID: 24100000}
   m_SnapshotID: 32c8b243dc9c2ca45bfa56a735e9c2ee
   m_FloatValues:
-    8390b428e65f6ce4b8ccb183a222ae42: -10
+    8390b428e65f6ce4b8ccb183a222ae42: -9.999999
+    2a7272ceb949c7546aa0529c65d5e21e: -10
   m_TransitionOverrides: {}
 --- !u!243 &200196966898429842
 AudioMixerGroupController:
@@ -169,6 +178,28 @@ AudioMixerEffectController:
   m_EffectName: Attenuation
   m_MixLevel: 8db3469eeb345764d830ea88dd8d6088
   m_Parameters: []
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
+--- !u!244 &8720003857119872897
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: 0dd1a8eb420c2f24ca0f8d487d1d40b2
+  m_EffectName: Flange
+  m_MixLevel: 8e5fb882317f62c4e9138389c36f0013
+  m_Parameters:
+  - m_ParameterName: Drymix
+    m_GUID: efdb41e13a0dc0b4d881953b3e221f8d
+  - m_ParameterName: Wetmix
+    m_GUID: b71b7495398834e46bbb8c804e0c4a58
+  - m_ParameterName: Depth
+    m_GUID: d8156470c00099f479d290cf2d67d6fb
+  - m_ParameterName: Rate
+    m_GUID: 76b33d432995bb44ab0833cbce8c87c8
   m_SendTarget: {fileID: 0}
   m_EnableWetMix: 0
   m_Bypass: 0

@@ -9,6 +9,10 @@ TagManager:
   - Ground
   - Ice
   - Grass
+  - New tag
+  - New tag (1)
+  - New tag (2)
+  - Checkpoint
   layers:
   - Default
   - TransparentFX

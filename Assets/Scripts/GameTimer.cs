@@ -1,22 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;  // Namespace for TextMeshPro
+using TMPro;
+using System;  // Namespace for TextMeshPro
 
 public class GameTimer : MonoBehaviour
 {
     public TextMeshProUGUI timerText;  // Reference to TextMeshProUGUI component
     private float startTime;
+    public float timeElapsed;
     private bool isTimerRunning;
 
     void Start()
     {
+        timeElapsed = PlayerPrefs.GetFloat("TimeElapsed");
         StartTimer();
     }
 
     public void StartTimer()
     {
-        startTime = Time.time;
+        //subtract TimeElapsed from time.time to continue timer
+        startTime = Time.time - PlayerPrefs.GetFloat("TimeElapsed");
         isTimerRunning = true;
     }
 
@@ -29,7 +33,7 @@ public class GameTimer : MonoBehaviour
     {
         if (isTimerRunning)
         {
-            float timeElapsed = Time.time - startTime;
+            timeElapsed = Time.time - startTime;
             timerText.text = FormatTime(timeElapsed);
         }
 
@@ -58,6 +62,9 @@ public class GameTimer : MonoBehaviour
             return $"{minutes:00}:{seconds:00}:{milliseconds:00}";
         }
     }
-
+    void OnDestroy()
+    {
+        PlayerPrefs.SetFloat("TimeElapsed", timeElapsed);
+    }
 
 }

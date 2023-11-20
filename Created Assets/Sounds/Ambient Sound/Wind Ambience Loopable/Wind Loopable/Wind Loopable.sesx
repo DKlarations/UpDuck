@@ -4,7 +4,7 @@
 
   <session appBuild="24.0.3.3" appVersion="24.0" audioChannelType="fivePointOne" bitDepth="32" duration="8241868" sampleRate="48000">
     <tracks>
-      <audioTrack automationLaneOpenState="false" id="10001" index="1" select="true" visible="true">
+      <audioTrack automationLaneOpenState="false" id="10001" index="1" select="false" visible="true">
         <trackParameters trackHeight="134" trackHue="160" trackMinimized="false">
           <name>Track 1</name>
         </trackParameters>
@@ -176,47 +176,45 @@
             <parameter index="0" name="volume" parameterValue="1"/>
             <parameter index="1" name="static gain" parameterValue="1"/>
           </component>
-          <component componentGuid="d00a9a97-d56f-447b-9892-33f884890d56" componentID="Audition.Mute" id="clipMute" name="Mute" powered="true">
+          <component componentGuid="bfab843d-75a6-4c1c-bdf2-a3effee1aea2" componentID="Audition.Mute" id="clipMute" name="Mute" powered="true">
             <parameter index="0" parameterValue="0"/>
             <parameter index="1" name="mute" parameterValue="0"/>
           </component>
-          <component id="clipPan" powered="true"/>
+          <component componentGuid="885bcd1c-f1dd-40a1-8ec9-5448884917e2" componentID="Audition.StereoPanner" id="clipPan" name="StereoPanner" powered="true">
+            <parameter index="0" name="Pan" parameterValue="0"/>
+          </component>
           <fadeIn crossFadeLinkType="linkedAsymmetric" endPoint="0" shape="19" startPoint="0" type="log"/>
           <fadeOut crossFadeLinkType="linkedAsymmetric" endPoint="3884084" shape="19" startPoint="3791355" type="log"/>
           <editParameter parameterIndex="0" slotIndex="4294967280"/>
+          <editParameter parameterIndex="0" slotIndex="4294967281"/>
           <channelMap>
             <channel index="0" sourceIndex="0"/>
             <channel index="1" sourceIndex="1"/>
-            <channel index="2" sourceIndex="2"/>
-            <channel index="3" sourceIndex="3"/>
-            <channel index="4" sourceIndex="4"/>
-            <channel index="5" sourceIndex="5"/>
           </channelMap>
         </audioClip>
-        <audioClip clipAutoCrossfade="true" crossFadeHeadClipID="0" crossFadeTailClipID="-1" endPoint="7399879" fileID="0" hue="-1" id="1" lockedInTime="false" looped="false" name="ES_Wind Storm 3 - SFX Producer" offline="false" select="true" sourceInPoint="0" sourceOutPoint="3608524" startPoint="3791355" zOrder="2">
+        <audioClip clipAutoCrossfade="true" crossFadeHeadClipID="0" crossFadeTailClipID="-1" endPoint="7399879" fileID="0" hue="-1" id="1" lockedInTime="false" looped="false" name="ES_Wind Storm 3 - SFX Producer" offline="false" select="false" sourceInPoint="0" sourceOutPoint="3608524" startPoint="3791355" zOrder="2">
           <component componentGuid="b528db69-545d-4a7f-9742-290a38a1f79d" componentID="Audition.Fader" id="clipGain" name="volume" powered="true">
             <parameter index="0" name="volume" parameterValue="1"/>
             <parameter index="1" name="static gain" parameterValue="1"/>
           </component>
-          <component componentGuid="da67bf0a-c681-4d7e-b419-a84d63a5843e" componentID="Audition.Mute" id="clipMute" name="Mute" powered="true">
+          <component componentGuid="61fd00a5-1240-462c-aa0b-8b009cfcd84c" componentID="Audition.Mute" id="clipMute" name="Mute" powered="true">
             <parameter index="0" parameterValue="0"/>
             <parameter index="1" name="mute" parameterValue="0"/>
           </component>
-          <component id="clipPan" powered="true"/>
+          <component componentGuid="d789d9d0-3784-45f0-9213-566921509120" componentID="Audition.StereoPanner" id="clipPan" name="StereoPanner" powered="true">
+            <parameter index="0" name="Pan" parameterValue="0"/>
+          </component>
           <fadeIn crossFadeLinkType="linkedAsymmetric" endPoint="92729" shape="18" startPoint="0" type="log"/>
           <fadeOut crossFadeLinkType="linkedAsymmetric" endPoint="3608524" shape="19" startPoint="3608524" type="log"/>
           <editParameter parameterIndex="0" slotIndex="4294967280"/>
+          <editParameter parameterIndex="0" slotIndex="4294967281"/>
           <channelMap>
             <channel index="0" sourceIndex="0"/>
             <channel index="1" sourceIndex="1"/>
-            <channel index="2" sourceIndex="2"/>
-            <channel index="3" sourceIndex="3"/>
-            <channel index="4" sourceIndex="4"/>
-            <channel index="5" sourceIndex="5"/>
           </channelMap>
         </audioClip>
       </audioTrack>
-      <audioTrack automationLaneOpenState="false" id="10003" index="3" select="false" visible="true">
+      <audioTrack automationLaneOpenState="false" id="10003" index="3" select="true" visible="true">
         <trackParameters trackHeight="134" trackHue="51" trackMinimized="false">
           <name>Track 3</name>
         </trackParameters>
@@ -621,9 +619,9 @@
         <editParameter parameterIndex="0" slotIndex="4294967280"/>
       </masterTrack>
     </tracks>
-    <sessionState ctiPosition="3995868" smpteStart="0">
-      <selectionState selectionDuration="0" selectionStart="3995868"/>
-      <viewState horizontalViewDuration="8241868" horizontalViewStart="0" trackControlsWidth="224" verticalScrollOffset="0"/>
+    <sessionState ctiPosition="557205" smpteStart="0">
+      <selectionState selectionDuration="0" selectionStart="557205"/>
+      <viewState horizontalViewDuration="8241867" horizontalViewStart="0" trackControlsWidth="224" verticalScrollOffset="0"/>
       <timeFormatState beatsPerBar="4" beatsPerMinute="120" customFrameRate="12" linkToDefaultTimeSettings="true" noteLength="4" subdivisions="16" timeCodeDropFrame="false" timeCodeFrameRate="30" timeCodeNTSC="false" timeFormat="timeFormatDecimal"/>
       <mixingOptionState defaultPanModeLogarithmic="false" panPower="-3" playOverlappingClips="false"/>
     </sessionState>
@@ -635,13 +633,12 @@
             xmlns:xmpMM="http://ns.adobe.com/xap/1.0/mm/"
             xmlns:stEvt="http://ns.adobe.com/xap/1.0/sType/ResourceEvent#"
             xmlns:dc="http://purl.org/dc/elements/1.1/"
-            xmlns:AEScart="http://ns.adobe.com/aes/cart/"
             xmlns:xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/">
          <xmp:CreatorTool>Adobe Audition 24.0 (Windows)</xmp:CreatorTool>
          <xmp:CreateDate>2023-11-19T02:11:31-06:00</xmp:CreateDate>
-         <xmp:MetadataDate>2023-11-19T02:13:39-06:00</xmp:MetadataDate>
-         <xmp:ModifyDate>2023-11-19T02:13:39-06:00</xmp:ModifyDate>
-         <xmpMM:InstanceID>xmp.iid:3bfcbbe2-f1cd-5b49-b37a-302803b71c28</xmpMM:InstanceID>
+         <xmp:MetadataDate>2023-11-19T16:59:32-06:00</xmp:MetadataDate>
+         <xmp:ModifyDate>2023-11-19T16:59:32-06:00</xmp:ModifyDate>
+         <xmpMM:InstanceID>xmp.iid:f5e91fef-92d3-5141-9184-2fbd82e48d98</xmpMM:InstanceID>
          <xmpMM:DocumentID>xmp.did:605baaf6-2a9f-4e4d-9c1f-b56ece829b11</xmpMM:DocumentID>
          <xmpMM:OriginalDocumentID>xmp.did:605baaf6-2a9f-4e4d-9c1f-b56ece829b11</xmpMM:OriginalDocumentID>
          <xmpMM:History>
@@ -667,46 +664,23 @@
                   <stEvt:softwareAgent>Adobe Audition 24.0 (Windows)</stEvt:softwareAgent>
                   <stEvt:changed>/</stEvt:changed>
                </rdf:li>
+               <rdf:li rdf:parseType="Resource">
+                  <stEvt:action>saved</stEvt:action>
+                  <stEvt:instanceID>xmp.iid:ddc598b1-aa03-024d-8969-f5abc0bcd9b1</stEvt:instanceID>
+                  <stEvt:when>2023-11-19T16:59:32-06:00</stEvt:when>
+                  <stEvt:softwareAgent>Adobe Audition 24.0 (Windows)</stEvt:softwareAgent>
+                  <stEvt:changed>/metadata</stEvt:changed>
+               </rdf:li>
+               <rdf:li rdf:parseType="Resource">
+                  <stEvt:action>saved</stEvt:action>
+                  <stEvt:instanceID>xmp.iid:f5e91fef-92d3-5141-9184-2fbd82e48d98</stEvt:instanceID>
+                  <stEvt:when>2023-11-19T16:59:32-06:00</stEvt:when>
+                  <stEvt:softwareAgent>Adobe Audition 24.0 (Windows)</stEvt:softwareAgent>
+                  <stEvt:changed>/</stEvt:changed>
+               </rdf:li>
             </rdf:Seq>
          </xmpMM:History>
          <dc:format>application/xml</dc:format>
-         <AEScart:Version>0101</AEScart:Version>
-         <AEScart:PostTimer>
-            <rdf:Seq>
-               <rdf:li rdf:parseType="Resource">
-                  <AEScart:Usage>EOD </AEScart:Usage>
-                  <AEScart:Value>557205</AEScart:Value>
-               </rdf:li>
-               <rdf:li rdf:parseType="Resource">
-                  <AEScart:Usage>EOD </AEScart:Usage>
-                  <AEScart:Value>557205</AEScart:Value>
-               </rdf:li>
-               <rdf:li rdf:parseType="Resource">
-                  <AEScart:Usage/>
-                  <AEScart:Value>4294967295</AEScart:Value>
-               </rdf:li>
-               <rdf:li rdf:parseType="Resource">
-                  <AEScart:Usage/>
-                  <AEScart:Value>4294967295</AEScart:Value>
-               </rdf:li>
-               <rdf:li rdf:parseType="Resource">
-                  <AEScart:Usage/>
-                  <AEScart:Value>4294967295</AEScart:Value>
-               </rdf:li>
-               <rdf:li rdf:parseType="Resource">
-                  <AEScart:Usage/>
-                  <AEScart:Value>4294967295</AEScart:Value>
-               </rdf:li>
-               <rdf:li rdf:parseType="Resource">
-                  <AEScart:Usage/>
-                  <AEScart:Value>4294967295</AEScart:Value>
-               </rdf:li>
-               <rdf:li rdf:parseType="Resource">
-                  <AEScart:Usage/>
-                  <AEScart:Value>4294967295</AEScart:Value>
-               </rdf:li>
-            </rdf:Seq>
-         </AEScart:PostTimer>
          <xmpDM:Tracks>
             <rdf:Bag>
                <rdf:li rdf:parseType="Resource">
@@ -843,7 +817,7 @@
   </session>
 
   <files>
-    <file absolutePath="C:\Users\DK\Downloads\ES_Wind Storm 3 - SFX Producer.wav" id="0" importerPrivateSettings="Compression:0:0;LargeFileSupport:0:0;SampleType:0:20;" mediaHandler="AmioWav" relativePath="../../../../../../Downloads/ES_Wind Storm 3 - SFX Producer.wav"/>
+    <file absolutePath="C:\Users\DK\UpDuck\Created Assets\Sounds\Ambient Sound\Wind Ambience Loopable\Wind Loopable\Imported Files\ES_Wind Storm 3 - SFX Producer.wav" id="0" importerPrivateSettings="Compression:0:0;LargeFileSupport:0:0;SampleType:0:20;" mediaHandler="AmioWav" relativePath="Imported Files/ES_Wind Storm 3 - SFX Producer.wav"/>
   </files>
 
   <audioDevice inputID="22222222-2222-2222-2222-22222222" outputID="11111111-1111-1111-1111-11111111">

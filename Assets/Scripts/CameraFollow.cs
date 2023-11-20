@@ -10,7 +10,9 @@ public class CameraFollow : MonoBehaviour
 
     [SerializeField] private float horizontalOffset = 1f; // Default offset for horizontal direction
     [SerializeField] private float verticalOffsetJump = 2f; // Adjust for jump
+    [SerializeField] private float verticalOffsetFall = 10f; // Adjust for fall
     [SerializeField] private float verticalOffsetGround = 0f; // Adjust for ground
+
 
     public void AdjustCameraForDirection(bool facingRight)
     {
@@ -23,6 +25,12 @@ public class CameraFollow : MonoBehaviour
     {
         // Update the vertical component of the targetOffset
         targetOffset.y = isJumping ? verticalOffsetJump : verticalOffsetGround;
+        StartAdjustment();
+    }
+    public void AdjustCameraForFall(bool isFalling)
+    {
+        // Update the vertical component of the targetOffset
+        targetOffset.y = isFalling ? verticalOffsetJump : verticalOffsetGround;
         StartAdjustment();
     }
 
