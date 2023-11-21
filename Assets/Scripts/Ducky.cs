@@ -14,7 +14,7 @@ using UnityEditor;
 public class Ducky : MonoBehaviour
 {
 
-    enum DuckyState { Idle, Walking, Running, Jumping, Flapping, WallSlide, Falling, Tired, TiredFall, Dead } // The state machine variable
+    enum DuckyState { Idle, Walking, Running, Jumping, Flapping, Wave, Falling, Tired, TiredFall, Dead } // The state machine variable
     private DuckyState currentState = DuckyState.Idle;
     private CinemachineImpulseSource impulseSource;
     public UI_StatusIndicator status;
@@ -56,6 +56,8 @@ public class Ducky : MonoBehaviour
     [SerializeField] private float yVelocityBuffer = .1f;
     private float jumpBufferCounter;
     private float pushCooldownTimer = 0f;
+    private float idleTimer = 0f;
+    private float idleTimeBeforeWave = 8.1f; //Make sure to keep the .1 on any value
 
     private string currentAnimation = "Ducky Idle";
     private Rigidbody2D body;
@@ -85,6 +87,7 @@ public class Ducky : MonoBehaviour
     const string DUCKY_DEAD = "Ducky Dead";
     const string DUCKY_WALK = "Ducky Walk";
     const string DUCKY_RUN = "Ducky Run";
+    const string DUCKY_WAVE = "Ducky Wave";
 
     #if UNITY_EDITOR
     [UnityEditor.MenuItem("DuckStuff/SelectDuck #d")]
@@ -142,7 +145,8 @@ public class Ducky : MonoBehaviour
         else if (onGround
         && body.velocity.y <= yVelocityBuffer
         && body.velocity.y >= -yVelocityBuffer
-        && currentState != DuckyState.Dead)
+        && currentState != DuckyState.Dead 
+        && currentState != DuckyState.Wave)
         {
             if (shouldJump == false)
             {
@@ -183,6 +187,26 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Walking;
         }
 
+        //IDLE WAVE ANIMATION TIMER
+        // Update the idle timer if in Idle state
+        if (currentState == DuckyState.Idle)
+        {
+            idleTimer += Time.deltaTime;
+            if (idleTimer >= idleTimeBeforeWave)
+            {
+                // Trigger waving animation
+                currentState = DuckyState.Wave;
+                idleTimer = 0f; // Reset timer
+                if (idleTimeBeforeWave > 1)
+                {
+                    idleTimeBeforeWave--; //Slowly increase how often Ducky Waves
+                }
+            }
+        }
+        else
+        {
+            idleTimer = 0f; // Reset timer if not idle
+        }
 
 
 
@@ -297,26 +321,25 @@ public class Ducky : MonoBehaviour
 
 
         status.LabelTheDuck(currentState.ToString());
-        
+
         // Handle state-specific logic
         switch (currentState)
         {
             case DuckyState.Walking:
                 ChangeAnimationState(DUCKY_WALK);
                 break;
-            
+
             case DuckyState.Running:
                 moveDust.Play();
                 ChangeAnimationState(DUCKY_RUN);
                 break;
 
-            case DuckyState.Jumping:                
+            case DuckyState.Jumping:
                 ChangeAnimationState(DUCKY_JUMP);
                 break;
 
             case DuckyState.Flapping:
-                flapDuration += Time.fixedDeltaTime;
-                body.velocity = new Vector2(body.velocity.x, body.velocity.y + flapStrength * Time.fixedDeltaTime);
+                HandleFlap();
                 ChangeAnimationState(DUCKY_FLAP);
                 break;
 
@@ -325,8 +348,7 @@ public class Ducky : MonoBehaviour
                 break;
 
             case DuckyState.Tired:
-                flapDuration += Time.fixedDeltaTime;
-                body.velocity = new Vector2(body.velocity.x, body.velocity.y + flapStrength * Time.fixedDeltaTime);
+                HandleFlap();
                 ChangeAnimationState(DUCKY_TIRED);
                 break;
 
@@ -334,15 +356,23 @@ public class Ducky : MonoBehaviour
                 ChangeAnimationState(DUCKY_TIRED_FALL);
                 break;
 
+            case DuckyState.Wave:
+                ChangeAnimationState(DUCKY_WAVE);
+                break;
+
             case DuckyState.Dead:
                 ChangeAnimationState(DUCKY_DEAD);
+                break;
+
+            case DuckyState.Idle:
+                ChangeAnimationState(DUCKY_IDLE);
                 break;
 
             default:
                 ChangeAnimationState(DUCKY_IDLE);
                 OnLanding();
                 break;
-        } 
+        }
     }
     void ChangeAnimationState(string newAnimation)
     {
@@ -465,6 +495,11 @@ public class Ducky : MonoBehaviour
             jumpBufferCounter = 0f;
         }
     }
+    private void HandleFlap()
+    {
+        flapDuration += Time.fixedDeltaTime;
+        body.velocity = new Vector2(body.velocity.x, body.velocity.y + flapStrength * Time.fixedDeltaTime);
+    }
     private bool IsFallingState() 
     {
         return currentState == DuckyState.Falling || currentState == DuckyState.TiredFall;
@@ -532,7 +567,7 @@ public class Ducky : MonoBehaviour
             PlayRandomFootstep(selectedFootstepSounds);
         }
     }
-    public void FacePlant()
+    private void FacePlant()
     {
         CameraShakeManager.instance.CameraShake(impulseSource);
         StartCoroutine(InputDelayCoroutine());
@@ -598,7 +633,7 @@ public class Ducky : MonoBehaviour
 
         jumpBufferCounter = 0f;
     }
-    
+    public void ResetToIdleState(){currentState = DuckyState.Idle;}
     public void ChangeGroundMaterial(RaycastHit2D hit)
     {
         if (hit.collider != null)
@@ -643,5 +678,5 @@ public class Ducky : MonoBehaviour
 
     }
 
-    
+
 }

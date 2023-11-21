@@ -24,10 +24,7 @@ public class GameTimer : MonoBehaviour
         isTimerRunning = true;
     }
 
-    public void StopTimer()
-    {
-        isTimerRunning = false;
-    }
+    public void StopTimer(){isTimerRunning = false;}
 
     void Update()
     {
