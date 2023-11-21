@@ -30,8 +30,6 @@ public class Ducky : MonoBehaviour
     public List<AudioClip> MetalFootSteps;
     public List<AudioClip> WoodFootSteps;
     public List<AudioClip> IceFootSteps;
-    private float footstepDelay = 0.3f; // Delay between footsteps, adjust based on movement speed
-    private float footstepTimer;
     enum groundMaterial
     {
         Ground, Grass, Metal, Wood, Ice, Empty
@@ -103,9 +101,11 @@ public class Ducky : MonoBehaviour
         animator = GetComponent<Animator>();
         impulseSource = GetComponent<CinemachineImpulseSource>();
 
-
+        #if UNITY_EDITOR
+        transform.position = transform.position;
+        #else
         transform.position = new Vector3 (PlayerPrefs.GetFloat("PlayerXLocation"), PlayerPrefs.GetFloat("PlayerYLocation"), 0);
-
+        #endif
     }
 
     void Update()
@@ -273,18 +273,13 @@ public class Ducky : MonoBehaviour
         {
             cameraFollow.AdjustCameraForJump(!onGround);
         }
-        if(body.velocity.y > deadThreshold)
-        {
-            cameraFollow.AdjustCameraForFall(currentState == DuckyState.Falling);
-        }
         
-        //Exit the program with Escape
-        if (Input.GetKey(KeyCode.Escape))
+        //Go to Menu with Escape
+        if (Input.GetKey(KeyCode.Escape) || Input.GetKey(KeyCode.Return))
         {
             SceneManager.LoadScene("Menu");
             PlayerPrefs.SetFloat("PlayerXLocation", transform.position.x);
             PlayerPrefs.SetFloat("PlayerYLocation", transform.position.y);
-            Application.Quit();
         }
        
     }
@@ -426,7 +421,6 @@ public class Ducky : MonoBehaviour
     public void OnLanding()
     {
         cameraFollow.AdjustCameraForJump(!onGround);
-        cameraFollow.AdjustCameraForFall(!onGround);
         flapDuration = 0.0f; // Reset flapDuration to maximum
         airborneTime = 0f;   // Reset airborneTime to Zero
         shouldJump = true;   // Reset the Should Jump Flag

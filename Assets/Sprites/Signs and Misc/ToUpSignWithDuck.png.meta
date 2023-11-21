@@ -152,7 +152,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      ToUpSignWithDuck_0: 7193373542899294434
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

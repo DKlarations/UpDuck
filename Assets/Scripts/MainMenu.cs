@@ -13,8 +13,8 @@ public class MainMenu : MonoBehaviour
     public void StartGame()
     {
         
-
-        PlayerPrefs.SetFloat("TimeElapsed", 0);
+        //Reset PlayerPrefs to game beginning
+        PlayerPrefs.SetFloat("TimeElapsed", 0); 
         PlayerPrefs.SetFloat("PlayerXLocation", 54);
         PlayerPrefs.SetFloat("PlayerYLocation", -3); 
 
@@ -28,13 +28,11 @@ public class MainMenu : MonoBehaviour
         } 
 
         SceneManager.LoadScene(1);   // 1 is the Game
-        Debug.Log("GAME STARTED");
     }
     public void ResumeGame()
     {
         CheckpointManager.ResetCheckpointTimesLoaded();
         SceneManager.LoadScene(1);   // 1 is the Game
-        Debug.Log("GAME RESUMED");
     }
     public void QuitGame()
     {

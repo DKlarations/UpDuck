@@ -24,6 +24,7 @@ public class TimerPlatform : MonoBehaviour
     const string OFF_ANIMATION = "TimedPlatformOff";
     const string HIDDEN_PLATFORM_ON_ANIMATION = "HiddenPlatformReveal";
     const string HIDDEN_PLATFORM_OFF_ANIMATION = "HiddenPlatformDisappear";
+    const string HIDDEN_PLATFORM_IDLE_ANIMATION = "HiddenPlatformInvisible";
 
     void Start()
     {
@@ -38,6 +39,8 @@ public class TimerPlatform : MonoBehaviour
             renderers[i] = platformsToEnable[i].GetComponent<SpriteRenderer>();
             colliders[i] = platformsToEnable[i].GetComponent<BoxCollider2D>();
             hiddenPlatformAnimators[i] = platformsToEnable[i].GetComponent<Animator>();
+
+            hiddenPlatformAnimators[i].Play(HIDDEN_PLATFORM_IDLE_ANIMATION);
         }
 
         PreloadAudio();
