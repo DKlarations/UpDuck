@@ -18,10 +18,6 @@ public class MainMenu : MonoBehaviour
         PlayerPrefs.SetFloat("PlayerXLocation", 54);
         PlayerPrefs.SetFloat("PlayerYLocation", -3); 
 
-        GameObject[] objectsWithTag = GameObject.FindGameObjectsWithTag("Checkpoint");
-
-        Debug.Log("The length was: " + objectsWithTag.Length);
-
         for (int i = 1; i <= 4; i++)
         {
             PlayerPrefs.DeleteKey($"checkpoint_{i}");
@@ -31,6 +27,15 @@ public class MainMenu : MonoBehaviour
     }
     public void ResumeGame()
     {
+        //This is likely a bandaid on a bigger problem, but could just be unique to the WebGL version:
+        if (PlayerPrefs.GetFloat("TimeElapsed", -1) <= PlayerPrefs.GetFloat("checkpoint_1", -1))
+        {
+            for (int i = 1; i <= 4; i++)
+            {
+                PlayerPrefs.DeleteKey($"checkpoint_{i}");
+            } 
+        }
+        //
         CheckpointManager.ResetCheckpointTimesLoaded();
         SceneManager.LoadScene(1);   // 1 is the Game
     }
