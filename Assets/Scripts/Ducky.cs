@@ -206,6 +206,7 @@ public class Ducky : MonoBehaviour
         else
         {
             idleTimer = 0f; // Reset timer if not idle
+            idleTimeBeforeWave = 8.1f; // Reset to original value, should probably not hard code it
         }
 
 
