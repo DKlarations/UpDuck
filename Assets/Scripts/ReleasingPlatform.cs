@@ -57,7 +57,7 @@ public class PlatformController : MonoBehaviour
         yield return new WaitForSeconds(delayBeforeDisable);
 
         // Disable the Box Collider
-    //    boxCollider.enabled = false;
+        // boxCollider.enabled = false;
 
         //Play Ice Cracking Sounds
         AudioClip clipToPlay = iceCrackingSounds;
@@ -68,7 +68,7 @@ public class PlatformController : MonoBehaviour
         yield return new WaitForSeconds(delayBeforeEnable);
 
         // Re-enable the Box Collider
-    //    boxCollider.enabled = true;
+        // boxCollider.enabled = true;
 
         //Play Reforming Animation
         animator.Play(REFORMING_ANIMATION);

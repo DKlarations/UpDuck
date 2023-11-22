@@ -187,30 +187,8 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Walking;
         }
 
-        //IDLE WAVE ANIMATION TIMER
-        // Update the idle timer if in Idle state
-        if (currentState == DuckyState.Idle)
-        {
-            idleTimer += Time.deltaTime;
-            if (idleTimer >= idleTimeBeforeWave)
-            {
-                // Trigger waving animation
-                currentState = DuckyState.Wave;
-                idleTimer = 0f; // Reset timer
-                if (idleTimeBeforeWave > 1)
-                {
-                    idleTimeBeforeWave--; //Slowly increase how often Ducky Waves
-                }
-            }
-        }
-        else
-        {
-            idleTimer = 0f; // Reset timer if not idle
-            idleTimeBeforeWave = 8.1f; // Reset to original value, should probably not hard code it
-        }
-
-
-
+        //IDLE WAVE ANIMATION METHOD
+        HandleIdleWaveAnimation();
 
         //Jump Buffer Logic.  
         UpdateJumpBuffer();
@@ -572,6 +550,29 @@ public class Ducky : MonoBehaviour
     {
         CameraShakeManager.instance.CameraShake(impulseSource);
         StartCoroutine(InputDelayCoroutine());
+    }
+    private void HandleIdleWaveAnimation()
+    {
+        // Update the idle timer if in Idle state
+        if (currentState == DuckyState.Idle)
+        {
+            idleTimer += Time.deltaTime;
+            if (idleTimer >= idleTimeBeforeWave)
+            {
+                // Trigger waving animation
+                currentState = DuckyState.Wave;
+                idleTimer = 0f; // Reset timer
+                if (idleTimeBeforeWave > 1)
+                {
+                    idleTimeBeforeWave--; //Slowly increase how often Ducky Waves
+                }
+            }
+        }
+        else
+        {
+            idleTimer = 0f; // Reset timer if not idle
+            idleTimeBeforeWave = 8.1f; // Reset to original value, should probably not hard code it
+        }
     }
 
     IEnumerator InputDelayCoroutine()

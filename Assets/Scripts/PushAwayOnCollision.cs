@@ -24,7 +24,6 @@ public class PushAwayOnCollision : MonoBehaviour
             if (playerController != null)
             {
                 // Apply the force in the opposite direction of the collision normal
-                //playerRb.AddForce(-pushDirection * pushForce, ForceMode2D.Impulse);
                 playerController.ApplyPushForce(-pushDirection * pushForce, cooldownTime);
                 
                 // Play Boing sound
