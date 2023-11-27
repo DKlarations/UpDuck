@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using Cinemachine;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
+using System.Threading;
+using static UnityEngine.InputSystem.InputAction;
+
+
+
 
 
 
@@ -18,6 +24,8 @@ public class Ducky : MonoBehaviour
     private DuckyState currentState = DuckyState.Idle;
     private CinemachineImpulseSource impulseSource;
     public UI_StatusIndicator status;
+    public PlayerControls controls;
+    public DuckSettings settings;
 
     [Header("Audio")]
     public AudioSource audioPlayer;
@@ -42,18 +50,9 @@ public class Ducky : MonoBehaviour
     public ParticleSystem moveDust;
     public ParticleSystem bounceDust;
     [Header("Movement")]
-    [SerializeField] private float walkSpeed = 7f;
-    [SerializeField] private float jumpSpeed = 14f;
-    [SerializeField] private float coyoteTime = 0.15f;
+    private float walkSpeed = 7f;
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private float flapStrength = 2.0f;
     private float flapDuration = 0.0f;
-    [SerializeField] private float maxFlapDuration = 2.0f;
-    [SerializeField] private float faceplantInputLockTime = .5f;
-    [SerializeField] private float jumpBufferTime = 0.15f;
-    [SerializeField] private float fallMultiplier = 2.5f;
-    [SerializeField] private float maxFallVelocity = 30f;
-    [SerializeField] private float yVelocityBuffer = .1f;
     private float jumpBufferCounter;
     private float pushCooldownTimer = 0f;
     private float idleTimer = 0f;
@@ -61,20 +60,27 @@ public class Ducky : MonoBehaviour
 
     private string currentAnimation = "Ducky Idle";
     private Rigidbody2D body;
-
     private bool shouldJump;
     private bool onGround;
     private bool facingRight = true;
-    private bool canInput = true;   
-    public float horizontalPush = 0f;
-    
+    private bool canInput = true;
+    [HideInInspector]public float horizontalPush = 0f;
+
     private float airborneTime;
-    [SerializeField] private float deadThreshold = 1f;
     [Header("Ground Detection")]
     public Vector3 boxCastOffset;
     public Vector2 boxCastSize;
     public float castDistance;
-    
+
+    //======//
+    //INPUTS//
+    //======//
+    private bool isJumpPressed;
+    private bool isJumpReleased;
+    private bool isJumpHeld;
+    private bool isRunHeld;
+    private float moveAxisInput;
+
     //================//
     //Animation States//
     //================//
@@ -89,42 +95,69 @@ public class Ducky : MonoBehaviour
     const string DUCKY_RUN = "Ducky Run";
     const string DUCKY_WAVE = "Ducky Wave";
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     [UnityEditor.MenuItem("DuckStuff/SelectDuck #d")]
     public static void MoveDuck()
     {
-     //   Selection.activeGameObject = GameObject.FindObjectOfType<Ducky>().gameObject;
+        //   Selection.activeGameObject = GameObject.FindObjectOfType<Ducky>().gameObject;
         Selection.activeGameObject = GameObject.FindFirstObjectByType<Ducky>().gameObject;
     }
-    #endif
+#endif
 
     void Awake()
     {
         body = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         impulseSource = GetComponent<CinemachineImpulseSource>();
+        controls = new PlayerControls();
 
         #if UNITY_EDITOR
-        transform.position = transform.position;
+            transform.position = transform.position;
         #else
-        transform.position = new Vector3 (PlayerPrefs.GetFloat("PlayerXLocation"), PlayerPrefs.GetFloat("PlayerYLocation"), 0);
-        #endif
+            transform.position = new Vector3 (PlayerPrefs.GetFloat("PlayerXLocation"), PlayerPrefs.GetFloat("PlayerYLocation"), 0);
+        #endif  
     }
+    private void OnEnable()
+    {
+        controls.Enable();
+    }
+    private void OnDisable()
+    {
+        controls.Disable();
+    }
+    
 
     void Update()
     {
+        UpdateInputs();
         // Cast a box downward to check for ground layer
         RaycastHit2D hit = Physics2D.BoxCast(transform.position + boxCastOffset, boxCastSize, 0f, Vector2.down, castDistance, groundLayer);
         onGround = hit.collider != null;
+
+/*         if (onGround)
+        {
+            float slopeAngle = Vector2.Angle(hit.normal, Vector2.up);
+            float slopeDifficultyFactor = CalculateSlopeDifficultyFactor(slopeAngle);
+            walkSpeed = settings.originalWalkSpeed * slopeDifficultyFactor;
+            Debug.Log("The Walkspeed is: " + walkSpeed);
+        }
+        else
+        {
+            walkSpeed = settings.originalWalkSpeed;
+        } */
+
+
+
+
 
         //Change what the ground material is:
         ChangeGroundMaterial(hit);
 
         //Landing logic, check for faceplant, check for idle, otherwise Ducky is not on ground.
         if (onGround
-        && IsFallingState()
-        && body.velocity.y <= yVelocityBuffer
-        && body.velocity.y >= -yVelocityBuffer
+        && IsFallingState
+        && body.velocity.y <= settings.yVelocityBuffer
+        && body.velocity.y >= -settings.yVelocityBuffer
         )
         {
             OnLanding();  //Reset all airborne stats and flags
@@ -132,9 +165,9 @@ public class Ducky : MonoBehaviour
 
             if (currentState != DuckyState.Dead)
             {
-                body.velocity = new Vector2(0,0);  //Stop all momentum when faceplanting
+                body.velocity = new Vector2(0, 0);  //Stop all momentum when faceplanting
             }
-            
+
             currentState = DuckyState.Dead;
 
             moveDust.Play(); //Dust on dead landing
@@ -143,9 +176,9 @@ public class Ducky : MonoBehaviour
             PlayRandomSound(impactSounds);
         }
         else if (onGround
-        && body.velocity.y <= yVelocityBuffer
-        && body.velocity.y >= -yVelocityBuffer
-        && currentState != DuckyState.Dead 
+        && body.velocity.y <= settings.yVelocityBuffer
+        && body.velocity.y >= -settings.yVelocityBuffer
+        && currentState != DuckyState.Dead
         && currentState != DuckyState.Wave)
         {
             if (shouldJump == false)
@@ -154,10 +187,10 @@ public class Ducky : MonoBehaviour
             }
             OnLanding();
             currentState = DuckyState.Idle;
-        } 
+        }
         else if (!onGround
         && body.velocity.y < 0
-        && IsFallingState())
+        && IsFallingState)
         {
             airborneTime += Time.deltaTime;
             currentState = DuckyState.Jumping;  //Swap to jumping animation if descending
@@ -168,19 +201,17 @@ public class Ducky : MonoBehaviour
         }
 
         //If moving on ground play Running or Walking animation
-        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0 
-        && (Input.GetKey(KeyCode.LeftShift) 
-        || Input.GetKey(KeyCode.RightShift)
-        || Input.GetButton("Fire3"))
-        && onGround 
-        && canInput 
-        && currentState != DuckyState.Jumping) 
+        if (Mathf.Abs(moveAxisInput) > 0
+        && isRunHeld
+        && onGround
+        && canInput
+        && currentState != DuckyState.Jumping)
         {
             currentState = DuckyState.Running;
         }
-        else if(Mathf.Abs(Input.GetAxis("Horizontal")) > 0 
-        && onGround 
-        && canInput 
+        else if (Mathf.Abs(moveAxisInput) > 0
+        && onGround
+        && canInput
         && currentState != DuckyState.Jumping
         )
         {
@@ -201,12 +232,12 @@ public class Ducky : MonoBehaviour
                      "canInput:" + canInput + "\n" + 
                      "onGround:" + onGround + "\n" +
                      "airborneTime:" + airborneTime + "\n" +
-                     "coyoteTime:" + coyoteTime + "\n" + 
+                     "settings.coyoteTime:" + settings.coyoteTime + "\n" + 
                      "shouldJump:" + shouldJump + "\n" + 
                      "all together:" + (
                         jumpBufferCounter >= 0f 
                         && canInput 
-                        && airborneTime <= coyoteTime 
+                        && airborneTime <= settings.coyoteTime 
                         && shouldJump));
         } */
 
@@ -214,69 +245,68 @@ public class Ducky : MonoBehaviour
         HandleJump();
 
         //Small Jump Code. 
-        if(Input.GetButtonUp("Jump") && body.velocity.y > 0)
+        if (isJumpReleased && body.velocity.y > 0)
         {
             currentState = DuckyState.Jumping;
-            body.velocity = new Vector2(body.velocity.x, body.velocity.y*.5f);
+            body.velocity = new Vector2(body.velocity.x, body.velocity.y * .5f);
         }
 
         //Higher Gravity when past apex of jump
-        if (body.velocity.y < 0 || (body.velocity.y > 0 && !Input.GetButton("Jump")))
+        if (body.velocity.y < 0 || (body.velocity.y > 0 && !isJumpPressed))
         {
-            body.velocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+            body.velocity += Vector2.up * Physics2D.gravity.y * (settings.fallMultiplier - 1) * Time.deltaTime;
         }
-        
+
         //Flapping code. 
-        if (Input.GetButton("Jump") 
+        if (isJumpHeld
         && !onGround
-        && flapDuration < maxFlapDuration 
-        && body.velocity.y < 0  
-        && airborneTime > coyoteTime)
+        && flapDuration < settings.maxFlapDuration
+        && body.velocity.y < 0
+        && airborneTime > settings.coyoteTime)
         {
             currentState = DuckyState.Flapping;
         }
 
         //If Jump is released, Release the flap while saving flap time.
-         if (Input.GetButtonUp("Jump")
-        && (currentState == DuckyState.Flapping || currentState == DuckyState.Tired)
-        && flapDuration < maxFlapDuration)
+        if (isJumpReleased
+       && (currentState == DuckyState.Flapping || currentState == DuckyState.Tired)
+       && flapDuration < settings.maxFlapDuration)
         {
             currentState = DuckyState.Jumping;
         }
-
-        //Go to tired as approaching maxFlapDuration
-        if (Input.GetButton("Jump")
-        && flapDuration + .5f >= maxFlapDuration )
+        //Go to tired as approaching settings.maxFlapDuration
+        if (isJumpHeld
+        && flapDuration + .5f >= settings.maxFlapDuration)
         {
             currentState = DuckyState.Tired;
         }
 
-        //Go to Tired Fall if past maxFlapDuration
-        if (flapDuration >= maxFlapDuration)
+        //Go to Tired Fall if past settings.maxFlapDuration
+        if (flapDuration >= settings.maxFlapDuration)
         {
             currentState = DuckyState.TiredFall;
         }
 
         //This is the ducky going into a fall animation if going to faceplant.
-        if (body.velocity.y < 0 
+        if (body.velocity.y < 0
         && currentState != DuckyState.TiredFall
-        && airborneTime > deadThreshold)
+        && airborneTime > settings.deadThreshold)
         {
             currentState = DuckyState.Falling;
         }
 
         //Fall Speed Clamping
-        if(body.velocity.y < -10)
+        if (body.velocity.y < -10)
         {
-            body.velocity = Vector3.ClampMagnitude(body.velocity, maxFallVelocity);
+            body.velocity = Vector3.ClampMagnitude(body.velocity, settings.maxFallVelocity);
         }
 
         //Adjust camera with a jump
-        if(body.velocity.y < 0 && !onGround)
+        if (body.velocity.y < 0 && !onGround)
         {
             cameraFollow.AdjustCameraForJump(!onGround);
         }
-        
+
         //Go to Menu with Escape
         if (Input.GetKey(KeyCode.Escape) || Input.GetKey(KeyCode.Return))
         {
@@ -284,7 +314,16 @@ public class Ducky : MonoBehaviour
             PlayerPrefs.SetFloat("PlayerXLocation", transform.position.x);
             PlayerPrefs.SetFloat("PlayerYLocation", transform.position.y);
         }
-       
+
+    }
+
+    private void UpdateInputs()
+    {
+        isJumpPressed = controls.Player.Jump.triggered;
+        isJumpReleased = controls.Player.Jump.WasReleasedThisFrame();
+        isJumpHeld =  controls.Player.Jump.ReadValue<float>() > 0;
+        isRunHeld = controls.Player.Run.ReadValue<float>() > 0;
+        moveAxisInput = controls.Player.Move.ReadValue<float>();
     }
 
     void FixedUpdate()
@@ -367,16 +406,20 @@ public class Ducky : MonoBehaviour
     }
     public void UpdateMovement()
     {
-        float horizontalInput = Input.GetAxis("Horizontal");
+        //float horizontalInput = Input.GetAxis("Horizontal");
+        float horizontalInput = moveAxisInput;
         float speedMultiplier = 1f;  // Default speed multiplier
 
         // Reduce the cooldown timer by the time since the last frame
         pushCooldownTimer -= Time.deltaTime;
 
         // Check if shift key is held down to increase speed
-        if (onGround && (Input.GetKey(KeyCode.LeftShift) 
+        /* if (onGround && (Input.GetKey(KeyCode.LeftShift)
         || Input.GetKey(KeyCode.RightShift)
-        || Input.GetButton("Fire3")))
+        || Input.GetButton("Fire3"))) */
+
+        if (onGround
+        && isRunHeld)
         {
             speedMultiplier = 1.5f;
         }
@@ -385,7 +428,7 @@ public class Ducky : MonoBehaviour
         {
             // Calculate the desired velocity
             float targetVelocityX = horizontalInput * walkSpeed * speedMultiplier;
-            
+
             // Calculate the difference between current velocity and desired velocity
             float velocityChangeX = targetVelocityX - body.velocity.x;
 
@@ -402,6 +445,13 @@ public class Ducky : MonoBehaviour
         //Play Footsteps
         //HandleFootstepSounds();
     }
+    private float CalculateSlopeDifficultyFactor(float slopeAngle)
+    {
+        if (slopeAngle <= 0f) return 1f; // NO SLOPE
+
+        float difficultyFactor = Mathf.Clamp01(1 - (slopeAngle / settings.steepestClimbableAngle));
+        return difficultyFactor;
+    }
     public void ApplyPushForce(Vector2 force, float cooldownTime)
     {
         flapDuration = 0.0f;
@@ -412,7 +462,7 @@ public class Ducky : MonoBehaviour
 
         // Apply the push force
         body.AddForce(force, ForceMode2D.Impulse);
-        
+
         // Set the cooldown timer to prevent immediate input-based force application
         pushCooldownTimer = cooldownTime; // This is the cooldown period in seconds
         jumpBufferCounter = 0f;
@@ -434,12 +484,12 @@ public class Ducky : MonoBehaviour
         airborneTime = 0f;   // Reset airborneTime to Zero
         shouldJump = true;   // Reset the Should Jump Flag
     }
-    private void UpdateJumpBuffer()
+     private void UpdateJumpBuffer()
     {
         //Jump Buffer Logic.  
-        if (Input.GetButtonDown("Jump"))
+        if (isJumpPressed)
         {
-            jumpBufferCounter = jumpBufferTime;
+            jumpBufferCounter = settings.jumpBufferTime;
         }
         else
         {
@@ -449,19 +499,18 @@ public class Ducky : MonoBehaviour
     private void HandleJump()
     {
         // Jump Logic
-        if (jumpBufferCounter > 0f 
-        && canInput 
-        /* && onGround  */   //I think having this on essentially turned off coyote
-        && airborneTime <= coyoteTime 
+        if (jumpBufferCounter > 0f
+        && canInput
+        && airborneTime <= settings.coyoteTime
         && shouldJump)
-        { 
+        {
             currentState = DuckyState.Jumping;
 
             // Cancel out any existing vertical velocity before applying the jump impulse
             body.velocity = new Vector2(body.velocity.x, 0);
 
             // Apply an impulse force upwards
-            body.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
+            body.AddForce(Vector2.up * settings.jumpSpeed, ForceMode2D.Impulse);
 
             // Create Dust Particles
             moveDust.Play();
@@ -477,13 +526,9 @@ public class Ducky : MonoBehaviour
     private void HandleFlap()
     {
         flapDuration += Time.fixedDeltaTime;
-        body.velocity = new Vector2(body.velocity.x, body.velocity.y + flapStrength * Time.fixedDeltaTime);
+        body.velocity = new Vector2(body.velocity.x, body.velocity.y + settings.flapStrength * Time.fixedDeltaTime);
     }
-    private bool IsFallingState() 
-    {
-        return currentState == DuckyState.Falling || currentState == DuckyState.TiredFall;
-    }
-
+    private bool IsFallingState => currentState == DuckyState.Falling || currentState == DuckyState.TiredFall;
     private AudioClip lastPlayedClip;
     private void PlayRandomSound(AudioClip[] clips)
     {
@@ -493,7 +538,7 @@ public class Ducky : MonoBehaviour
         do
         {
             clipToPlay = clips[Random.Range(0, clips.Length)];
-        } 
+        }
         while (clipToPlay == lastPlayedClip && clips.Length > 1); // Ensure there's an alternative clip to choose
 
         lastPlayedClip = clipToPlay; // Remember the last played clip
@@ -510,7 +555,7 @@ public class Ducky : MonoBehaviour
         do
         {
             clipToPlay = footstepClips[Random.Range(0, footstepClips.Count)];
-        } 
+        }
         while (clipToPlay == lastPlayedClip && footstepClips.Count > 1); // Ensure there's an alternative clip to choose
 
         lastPlayedFootstep = clipToPlay; // Remember the last played clip
@@ -581,7 +626,7 @@ public class Ducky : MonoBehaviour
         canInput = false;
 
         //wait for specified delay
-        yield return new WaitForSeconds(faceplantInputLockTime);
+        yield return new WaitForSeconds(settings.faceplantInputLockTime);
 
         //Re-enable Input
         canInput = true;
@@ -596,7 +641,7 @@ public class Ducky : MonoBehaviour
 
         //flip the status readout of the ducky
         Vector3 statusScale = status.transform.localScale;
-        statusScale.x *= -1;  
+        statusScale.x *= -1;
         status.transform.localScale = statusScale;
 
         facingRight = !facingRight;
@@ -608,9 +653,9 @@ public class Ducky : MonoBehaviour
 
         //Create Dust Particles on direction change if on ground
         if (onGround)
-            {
-                moveDust.Play();
-            }
+        {
+            moveDust.Play();
+        }
     }
     public void VerticalBounce(float bounceForce)
     {
@@ -621,21 +666,21 @@ public class Ducky : MonoBehaviour
         currentState = DuckyState.Jumping;
 
         airborneTime = 0f;   // Reset airborneTime to Zero
-        
+
         float totalForce = bounceForce;
 
         bounceDust.Play();  // Create Bounce Particles
 
-        if (jumpBufferCounter > -jumpBufferTime)
+        if (jumpBufferCounter > -settings.jumpBufferTime)
         {
-            totalForce += jumpSpeed;
+            totalForce += settings.jumpSpeed;
         }
         body.velocity = new Vector2(body.velocity.x, 0);  // Reset vertical velocity
         body.AddForce(new Vector2(0, totalForce), ForceMode2D.Impulse);  // Apply combined force
 
         jumpBufferCounter = 0f;
     }
-    public void ResetToIdleState(){currentState = DuckyState.Idle;}
+    public void ResetToIdleState() { currentState = DuckyState.Idle; }
     public void ChangeGroundMaterial(RaycastHit2D hit)
     {
         if (hit.collider != null)
