@@ -50,8 +50,6 @@ public class Ducky : MonoBehaviour
     public ParticleSystem moveDust;
     public ParticleSystem bounceDust;
     [Header("Movement")]
-    private float walkSpeed = 7f;
-    [SerializeField] private LayerMask groundLayer;
     private float flapDuration = 0.0f;
     private float jumpBufferCounter;
     private float pushCooldownTimer = 0f;
@@ -68,6 +66,7 @@ public class Ducky : MonoBehaviour
 
     private float airborneTime;
     [Header("Ground Detection")]
+    [SerializeField] private LayerMask groundLayer;
     public Vector3 boxCastOffset;
     public Vector2 boxCastSize;
     public float castDistance;
@@ -80,6 +79,7 @@ public class Ducky : MonoBehaviour
     private bool isJumpHeld;
     private bool isRunHeld;
     private float moveAxisInput;
+    private bool isExitPressed;
 
     //================//
     //Animation States//
@@ -133,22 +133,6 @@ public class Ducky : MonoBehaviour
         // Cast a box downward to check for ground layer
         RaycastHit2D hit = Physics2D.BoxCast(transform.position + boxCastOffset, boxCastSize, 0f, Vector2.down, castDistance, groundLayer);
         onGround = hit.collider != null;
-
-/*         if (onGround)
-        {
-            float slopeAngle = Vector2.Angle(hit.normal, Vector2.up);
-            float slopeDifficultyFactor = CalculateSlopeDifficultyFactor(slopeAngle);
-            walkSpeed = settings.originalWalkSpeed * slopeDifficultyFactor;
-            Debug.Log("The Walkspeed is: " + walkSpeed);
-        }
-        else
-        {
-            walkSpeed = settings.originalWalkSpeed;
-        } */
-
-
-
-
 
         //Change what the ground material is:
         ChangeGroundMaterial(hit);
@@ -308,7 +292,7 @@ public class Ducky : MonoBehaviour
         }
 
         //Go to Menu with Escape
-        if (Input.GetKey(KeyCode.Escape) || Input.GetKey(KeyCode.Return))
+        if (isExitPressed)
         {
             SceneManager.LoadScene("Menu");
             PlayerPrefs.SetFloat("PlayerXLocation", transform.position.x);
@@ -324,6 +308,7 @@ public class Ducky : MonoBehaviour
         isJumpHeld =  controls.Player.Jump.ReadValue<float>() > 0;
         isRunHeld = controls.Player.Run.ReadValue<float>() > 0;
         moveAxisInput = controls.Player.Move.ReadValue<float>();
+        isExitPressed = controls.Player.Exit.triggered;
     }
 
     void FixedUpdate()
@@ -331,12 +316,13 @@ public class Ducky : MonoBehaviour
         UpdateMovement();
 
         // Debugging feature: Fly upwards when 'P' key and 'I' are pressed together.
+        #if UNITY_EDITOR
         if (Input.GetKey(KeyCode.P) && Input.GetKey(KeyCode.I))
         {
-            body.AddForce(Vector2.up * 1f, ForceMode2D.Impulse);
+            body.AddForce(Vector2.up, ForceMode2D.Impulse);
             OnLanding();
         }
-
+        #endif
 
         status.LabelTheDuck(currentState.ToString());
 
@@ -406,34 +392,51 @@ public class Ducky : MonoBehaviour
     }
     public void UpdateMovement()
     {
-        //float horizontalInput = Input.GetAxis("Horizontal");
-        float horizontalInput = moveAxisInput;
-        float speedMultiplier = 1f;  // Default speed multiplier
-
         // Reduce the cooldown timer by the time since the last frame
         pushCooldownTimer -= Time.deltaTime;
 
-        // Check if shift key is held down to increase speed
-        /* if (onGround && (Input.GetKey(KeyCode.LeftShift)
-        || Input.GetKey(KeyCode.RightShift)
-        || Input.GetButton("Fire3"))) */
-
-        if (onGround
-        && isRunHeld)
-        {
-            speedMultiplier = 1.5f;
-        }
+        //float horizontalInput = Input.GetAxis("Horizontal");
+        float horizontalInput = moveAxisInput;
+        float targetSpeed = isRunHeld ? settings.maxRunSpeed : settings.maxWalkSpeed;
+        float acceleration = isRunHeld ? settings.runAcceleration : settings.walkAcceleration;
+        float deceleration = settings.deceleration;
+        float velocityStopThreshold = settings.velocityStopThreshold;
 
         if (canInput && pushCooldownTimer <= 0f)
         {
-            // Calculate the desired velocity
-            float targetVelocityX = horizontalInput * walkSpeed * speedMultiplier;
-
-            // Calculate the difference between current velocity and desired velocity
-            float velocityChangeX = targetVelocityX - body.velocity.x;
-
-            // Apply force based on the difference. Using Impulse mode applies the force immediately
-            body.AddForce(new Vector2(velocityChangeX, 0), ForceMode2D.Impulse);
+            if(onGround)
+            {   //GROUND MOVEMENT LOGIC
+                if(Mathf.Abs(horizontalInput) > 0) 
+                {   //ACCELERATE
+                    if (Mathf.Abs(body.velocity.x) < targetSpeed)
+                    {
+                        // Apply an accelerating force based on the difference in speed
+                        float targetVelocityX = horizontalInput * targetSpeed;
+                        float speedDiff = targetVelocityX - body.velocity.x;
+                        float force = speedDiff * acceleration;
+                        body.AddForce(new Vector2(force, 0), ForceMode2D.Force);
+                    }
+                }
+                else 
+                {   //DECELERATE
+                     HandleDeceleration(deceleration, velocityStopThreshold);
+                }
+            }
+            else
+            {   //AIR MOVEMENT LOGIC
+                float targetVelocityX = horizontalInput * settings.airMaxSpeed;
+                deceleration = settings.deceleration * 2f;
+                if (Mathf.Abs(body.velocity.x) < settings.airMaxSpeed)
+                {
+                    float airControlForce = horizontalInput * settings.airControlStrength;
+                    body.AddForce(new Vector2(airControlForce, 0), ForceMode2D.Force);
+                }
+                else //DECELERATE
+                {
+                    HandleDeceleration(deceleration, velocityStopThreshold);
+                }
+            }
+            
         }
 
         // Change the character facing direction
@@ -441,16 +444,19 @@ public class Ducky : MonoBehaviour
         {
             FlipCharacter();
         }
-
-        //Play Footsteps
-        //HandleFootstepSounds();
     }
-    private float CalculateSlopeDifficultyFactor(float slopeAngle)
+    private void HandleDeceleration(float deceleration, float velocityStopThreshold)
     {
-        if (slopeAngle <= 0f) return 1f; // NO SLOPE
-
-        float difficultyFactor = Mathf.Clamp01(1 - (slopeAngle / settings.steepestClimbableAngle));
-        return difficultyFactor;
+        if (Mathf.Abs(body.velocity.x) > velocityStopThreshold)
+        {
+            float decelerationForce = -Mathf.Sign(body.velocity.x) * deceleration;
+            body.AddForce(new Vector2(decelerationForce, 0), ForceMode2D.Force);
+        }
+        else
+        {
+            // Clamp velocity to zero if it's within the threshold
+            body.velocity = new Vector2(0, body.velocity.y);
+        }
     }
     public void ApplyPushForce(Vector2 force, float cooldownTime)
     {

@@ -12,5 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b4000c7a3c4155e4087720338e06a6eb, type: 3}
   m_Name: DefaultDuckySettings
   m_EditorClassIdentifier: 
-  originalWalkSpeed: 7
-  jumpSpeed: 17
+  maxWalkSpeed: 8.4
+  walkAcceleration: 5
+  maxRunSpeed: 13.2
+  runAcceleration: 7
+  deceleration: 20
+  velocityStopThreshold: 0.3
+  jumpSpeed: 17.5
+  airMaxSpeed: 7
+  airControlStrength: 25
+  jumpBufferTime: 0.2
+  coyoteTime: 0.15
+  fallMultiplier: 1.4
+  flapStrength: 30
+  maxFlapDuration: 1.5
+  steepestClimbableAngle: 75
+  faceplantInputLockTime: 1
+  maxFallVelocity: 20
+  yVelocityBuffer: 10
+  deadThreshold: 2.5
