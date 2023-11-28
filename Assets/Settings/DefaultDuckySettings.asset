@@ -18,14 +18,17 @@ MonoBehaviour:
   runAcceleration: 7
   deceleration: 20
   velocityStopThreshold: 0.3
-  jumpSpeed: 17.5
+  jumpForce: 17
   airMaxSpeed: 7
-  airControlStrength: 25
+  airControlStrength: 40
   jumpBufferTime: 0.2
   coyoteTime: 0.15
   fallMultiplier: 1.4
   flapStrength: 30
   maxFlapDuration: 1.5
+  wallJumpForce: 17
+  wallJumpAngle: 60
+  wallSlideSpeed: 25
   steepestClimbableAngle: 75
   faceplantInputLockTime: 1
   maxFallVelocity: 20

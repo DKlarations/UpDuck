@@ -20,7 +20,7 @@ using UnityEditor;
 public class Ducky : MonoBehaviour
 {
 
-    enum DuckyState { Idle, Walking, Running, Jumping, Flapping, Wave, Falling, Tired, TiredFall, Dead } // The state machine variable
+    enum DuckyState { Idle, Walking, Running, Jumping, Flapping, Wave, WallSlide, Falling, Tired, TiredFall, Dead } // The state machine variable
     private DuckyState currentState = DuckyState.Idle;
     private CinemachineImpulseSource impulseSource;
     public UI_StatusIndicator status;
@@ -70,6 +70,12 @@ public class Ducky : MonoBehaviour
     public Vector3 boxCastOffset;
     public Vector2 boxCastSize;
     public float castDistance;
+    [Header("Wall Detection")]
+    public LayerMask wallLayer;
+    [SerializeField] private Vector2 wallBoxCastOffset;
+    [SerializeField] private float wallBoxCastDistance;
+    [SerializeField] private Vector2 wallBoxCastSize;
+    private bool isOnWall;
 
     //======//
     //INPUTS//
@@ -90,6 +96,7 @@ public class Ducky : MonoBehaviour
     const string DUCKY_FALL = "Ducky Fall";
     const string DUCKY_TIRED = "Ducky Tired";
     const string DUCKY_TIRED_FALL = "Ducky Tired Fall";
+    const string DUCKY_WALL_SLIDE = "Ducky WallSlide";
     const string DUCKY_DEAD = "Ducky Dead";
     const string DUCKY_WALK = "Ducky Walk";
     const string DUCKY_RUN = "Ducky Run";
@@ -226,7 +233,13 @@ public class Ducky : MonoBehaviour
         } */
 
         //Jump Logic
+        if (isOnWall && jumpBufferCounter > 0f)
+        {
+            HandleWallJump();
+        }
+        
         HandleJump();
+        
 
         //Small Jump Code. 
         if (isJumpReleased && body.velocity.y > 0)
@@ -315,6 +328,19 @@ public class Ducky : MonoBehaviour
     {
         UpdateMovement();
 
+        RaycastHit2D hitRight = Physics2D.BoxCast(transform.position + (Vector3)wallBoxCastOffset, wallBoxCastSize, 0f, Vector2.right, wallBoxCastDistance, wallLayer);
+        RaycastHit2D hitLeft = Physics2D.BoxCast(transform.position + (Vector3)wallBoxCastOffset, wallBoxCastSize, 0f, Vector2.left, wallBoxCastDistance, wallLayer);
+        isOnWall = (hitRight.collider != null || hitLeft.collider != null) && !onGround;
+
+        if (isOnWall)
+        {
+            HandleWallSlide();
+        }
+        else if (currentState == DuckyState.WallSlide)
+        {
+            currentState = DuckyState.Jumping;
+        }
+
         // Debugging feature: Fly upwards when 'P' key and 'I' are pressed together.
         #if UNITY_EDITOR
         if (Input.GetKey(KeyCode.P) && Input.GetKey(KeyCode.I))
@@ -349,6 +375,10 @@ public class Ducky : MonoBehaviour
 
             case DuckyState.Falling:
                 ChangeAnimationState(DUCKY_FALL);
+                break;
+
+            case DuckyState.WallSlide:
+                ChangeAnimationState(DUCKY_WALL_SLIDE);
                 break;
 
             case DuckyState.Tired:
@@ -505,7 +535,8 @@ public class Ducky : MonoBehaviour
     private void HandleJump()
     {
         // Jump Logic
-        if (jumpBufferCounter > 0f
+        if (currentState != DuckyState.WallSlide
+        && jumpBufferCounter > 0f
         && canInput
         && airborneTime <= settings.coyoteTime
         && shouldJump)
@@ -516,7 +547,7 @@ public class Ducky : MonoBehaviour
             body.velocity = new Vector2(body.velocity.x, 0);
 
             // Apply an impulse force upwards
-            body.AddForce(Vector2.up * settings.jumpSpeed, ForceMode2D.Impulse);
+            body.AddForce(Vector2.up * settings.jumpForce, ForceMode2D.Impulse);
 
             // Create Dust Particles
             moveDust.Play();
@@ -529,10 +560,45 @@ public class Ducky : MonoBehaviour
             jumpBufferCounter = 0f;
         }
     }
+    private void HandleWallJump()
+    {
+        Vector2 jumpDirection = CalculateWallJumpDirection();
+        body.velocity = new Vector2(0, 0); // Reset existing velocity
+        body.AddForce(jumpDirection * settings.wallJumpForce, ForceMode2D.Impulse);
+
+        currentState = DuckyState.Jumping; // Transition to jumping state
+        // Create Dust Particles
+        moveDust.Play();
+        // Play random jump sound.
+        PlayRandomSound(jumpSounds);
+
+        // Reset timers and flags
+        shouldJump = false;
+        jumpBufferCounter = 0f;
+    }
+    private Vector2 CalculateWallJumpDirection()
+    {
+        // Calculate the jump direction based on the wall slide direction
+        float angleInRadians = settings.wallJumpAngle * Mathf.Deg2Rad;
+        float x = facingRight ? -Mathf.Cos(angleInRadians) : Mathf.Cos(angleInRadians);
+        float y = Mathf.Sin(angleInRadians);
+
+        return new Vector2(x, y).normalized;
+    }
     private void HandleFlap()
     {
         flapDuration += Time.fixedDeltaTime;
         body.velocity = new Vector2(body.velocity.x, body.velocity.y + settings.flapStrength * Time.fixedDeltaTime);
+    }
+    private void HandleWallSlide()
+    {
+        currentState = DuckyState.WallSlide;
+
+        Vector2 slideForce = new Vector2(0, settings.wallSlideSpeed);
+        body.AddForce(slideForce, ForceMode2D.Force);
+
+        flapDuration = 0.0f; // Reset flapDuration to maximum
+        airborneTime = 0f;   // Reset airborneTime to Zero
     }
     private bool IsFallingState => currentState == DuckyState.Falling || currentState == DuckyState.TiredFall;
     private AudioClip lastPlayedClip;
@@ -679,7 +745,7 @@ public class Ducky : MonoBehaviour
 
         if (jumpBufferCounter > -settings.jumpBufferTime)
         {
-            totalForce += settings.jumpSpeed;
+            totalForce += settings.jumpForce;
         }
         body.velocity = new Vector2(body.velocity.x, 0);  // Reset vertical velocity
         body.AddForce(new Vector2(0, totalForce), ForceMode2D.Impulse);  // Apply combined force
@@ -721,13 +787,28 @@ public class Ducky : MonoBehaviour
         Vector2 topLeft = castOrigin + new Vector2(-boxCastSize.x / 2, boxCastSize.y / 2);
         Vector2 topRight = castOrigin + new Vector2(boxCastSize.x / 2, boxCastSize.y / 2);
 
-        Color boxColor = onGround ? Color.green : Color.red;
+        Color groundBoxColor = onGround ? Color.green : Color.red;
 
         // Draw the box using Debug.DrawLine
-        Debug.DrawLine(bottomLeft, bottomRight, boxColor); // Bottom
-        Debug.DrawLine(topLeft, topRight, boxColor);       // Top
-        Debug.DrawLine(bottomLeft, topLeft, boxColor);     // Left
-        Debug.DrawLine(bottomRight, topRight, boxColor);   // Right
+        Debug.DrawLine(bottomLeft, bottomRight, groundBoxColor); // Bottom
+        Debug.DrawLine(topLeft, topRight, groundBoxColor);       // Top
+        Debug.DrawLine(bottomLeft, topLeft, groundBoxColor);     // Left
+        Debug.DrawLine(bottomRight, topRight, groundBoxColor);   // Right
+
+        //-------------------------------------------------------//
+        // WALL BOX CASTS
+        // Set the color of the gizmo
+        Gizmos.color = isOnWall ? Color.green : Color.red;
+
+        // Right-side gizmo
+        Vector3 boxCastOriginRight = transform.position + (Vector3)wallBoxCastOffset + Vector3.right * wallBoxCastDistance / 2;
+        Vector3 sizeRight = new(wallBoxCastSize.x, wallBoxCastSize.y, 1);
+        Gizmos.DrawWireCube(boxCastOriginRight, sizeRight);
+
+        // Left-side gizmo
+        Vector3 boxCastOriginLeft = transform.position + (Vector3)wallBoxCastOffset + Vector3.left * wallBoxCastDistance / 2;
+        Vector3 sizeLeft = new(wallBoxCastSize.x, wallBoxCastSize.y, 1);
+        Gizmos.DrawWireCube(boxCastOriginLeft, sizeLeft);
 
     }
 
