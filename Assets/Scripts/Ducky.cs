@@ -61,7 +61,7 @@ public class Ducky : MonoBehaviour
     private bool shouldJump;
     private bool onGround;
     private bool facingRight = true;
-    private bool canInput = true;
+    public bool canInput = true;
     [HideInInspector]public float horizontalPush = 0f;
 
     private float airborneTime;
@@ -671,7 +671,7 @@ public class Ducky : MonoBehaviour
     private void HandleIdleWaveAnimation()
     {
         // Update the idle timer if in Idle state
-        if (currentState == DuckyState.Idle)
+        if (currentState == DuckyState.Idle || currentState == DuckyState.Wave)
         {
             idleTimer += Time.deltaTime;
             if (idleTimer >= idleTimeBeforeWave)
