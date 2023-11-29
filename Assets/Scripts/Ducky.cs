@@ -65,6 +65,7 @@ public class Ducky : MonoBehaviour
     [HideInInspector]public float horizontalPush = 0f;
 
     private float airborneTime;
+    private float freefallTime;
     [Header("Ground Detection")]
     [SerializeField] private LayerMask groundLayer;
     public Vector3 boxCastOffset;
@@ -184,11 +185,13 @@ public class Ducky : MonoBehaviour
         && IsFallingState)
         {
             airborneTime += Time.deltaTime;
+            freefallTime += Time.deltaTime;
             currentState = DuckyState.Jumping;  //Swap to jumping animation if descending
         }
         else if (!onGround)
         {
             airborneTime += Time.deltaTime;
+            freefallTime += Time.deltaTime;
         }
 
         //If moving on ground play Running or Walking animation
@@ -251,17 +254,18 @@ public class Ducky : MonoBehaviour
         //Higher Gravity when past apex of jump
         if (body.velocity.y < 0 || (body.velocity.y > 0 && !isJumpPressed))
         {
-            body.velocity += Vector2.up * Physics2D.gravity.y * (settings.fallMultiplier - 1) * Time.deltaTime;
+            body.velocity += (settings.fallMultiplier - 1) * Physics2D.gravity.y * Time.deltaTime * Vector2.up;
         }
 
         //Flapping code. 
-        if (isJumpHeld
-        && !onGround
-        && flapDuration < settings.maxFlapDuration
-        && body.velocity.y < 0
-        && airborneTime > settings.coyoteTime)
+        if (isJumpHeld && !onGround && flapDuration < settings.maxFlapDuration)
         {
-            currentState = DuckyState.Flapping;
+            // Check if Ducky is either in Falling state or airborne beyond coyote time
+            if ((currentState == DuckyState.Falling || airborneTime > settings.coyoteTime) && body.velocity.y < 0)
+            {
+                freefallTime = 0f; // Reset freefall time
+                currentState = DuckyState.Flapping;
+            }
         }
 
         //If Jump is released, Release the flap while saving flap time.
@@ -287,7 +291,7 @@ public class Ducky : MonoBehaviour
         //This is the ducky going into a fall animation if going to faceplant.
         if (body.velocity.y < 0
         && currentState != DuckyState.TiredFall
-        && airborneTime > settings.deadThreshold)
+        && freefallTime > settings.deadThreshold)
         {
             currentState = DuckyState.Falling;
         }
@@ -332,7 +336,7 @@ public class Ducky : MonoBehaviour
         RaycastHit2D hitLeft = Physics2D.BoxCast(transform.position + (Vector3)wallBoxCastOffset, wallBoxCastSize, 0f, Vector2.left, wallBoxCastDistance, wallLayer);
         isOnWall = (hitRight.collider != null || hitLeft.collider != null) && !onGround;
 
-        if (isOnWall)
+        if (isOnWall && (currentState != DuckyState.TiredFall || currentState == DuckyState.Dead))
         {
             HandleWallSlide();
         }
@@ -455,7 +459,7 @@ public class Ducky : MonoBehaviour
             else
             {   //AIR MOVEMENT LOGIC
                 float targetVelocityX = horizontalInput * settings.airMaxSpeed;
-                deceleration = settings.deceleration * 2f;
+                deceleration = settings.airDeceleration;
                 if (Mathf.Abs(body.velocity.x) < settings.airMaxSpeed)
                 {
                     float airControlForce = horizontalInput * settings.airControlStrength;
@@ -495,6 +499,7 @@ public class Ducky : MonoBehaviour
         currentState = DuckyState.Idle;
         currentState = DuckyState.Jumping;
         airborneTime = 0f;   // Reset airborneTime to Zero
+        freefallTime = 0f;
 
         // Apply the push force
         body.AddForce(force, ForceMode2D.Impulse);
@@ -518,6 +523,7 @@ public class Ducky : MonoBehaviour
         cameraFollow.AdjustCameraForJump(!onGround);
         flapDuration = 0.0f; // Reset flapDuration to maximum
         airborneTime = 0f;   // Reset airborneTime to Zero
+        freefallTime = 0f;   // Reset freefallTime to Zero
         shouldJump = true;   // Reset the Should Jump Flag
     }
      private void UpdateJumpBuffer()
@@ -588,6 +594,8 @@ public class Ducky : MonoBehaviour
     private void HandleFlap()
     {
         flapDuration += Time.fixedDeltaTime;
+        freefallTime = 0f;  
+
         body.velocity = new Vector2(body.velocity.x, body.velocity.y + settings.flapStrength * Time.fixedDeltaTime);
     }
     private void HandleWallSlide()
@@ -599,6 +607,7 @@ public class Ducky : MonoBehaviour
 
         flapDuration = 0.0f; // Reset flapDuration to maximum
         airborneTime = 0f;   // Reset airborneTime to Zero
+        freefallTime = 0;    // Reset freefallTime to Zero
     }
     private bool IsFallingState => currentState == DuckyState.Falling || currentState == DuckyState.TiredFall;
     private AudioClip lastPlayedClip;
@@ -738,6 +747,7 @@ public class Ducky : MonoBehaviour
         currentState = DuckyState.Jumping;
 
         airborneTime = 0f;   // Reset airborneTime to Zero
+        freefallTime = 0f;   // Reset freefallTime to Zero
 
         float totalForce = bounceForce;
 

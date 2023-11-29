@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 835547119922572835}
   - component: {fileID: 3483208445247820559}
   - component: {fileID: 5308687412316916053}
-  m_Layer: 3
+  m_Layer: 8
   m_Name: SeesawRed
   m_TagString: Metal
   m_Icon: {fileID: 5132851093641282708, guid: 0000000000000000d000000000000000, type: 0}

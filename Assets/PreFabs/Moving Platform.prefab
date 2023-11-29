@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 6736115677015126286}
   - component: {fileID: 1646361494775902733}
   - component: {fileID: 7414304089673327663}
-  m_Layer: 3
+  m_Layer: 8
   m_Name: Moving Platform
   m_TagString: Wood
   m_Icon: {fileID: 5132851093641282708, guid: 0000000000000000d000000000000000, type: 0}

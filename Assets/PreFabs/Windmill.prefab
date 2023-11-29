@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3393259700463012003}
   - component: {fileID: 9166390256237270608}
   - component: {fileID: 2011705362300644938}
-  m_Layer: 3
+  m_Layer: 8
   m_Name: WindmillEvenClosed
   m_TagString: Wood
   m_Icon: {fileID: 0}
@@ -236,7 +236,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1113219152834016766}
   - component: {fileID: 6635261127627170645}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Windmill
   m_TagString: Wood
   m_Icon: {fileID: -5938655980376293919, guid: 0000000000000000d000000000000000, type: 0}

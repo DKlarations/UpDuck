@@ -21,7 +21,8 @@ MonoBehaviour:
   jumpForce: 17
   airMaxSpeed: 7
   airControlStrength: 40
-  jumpBufferTime: 0.2
+  airDeceleration: 100
+  jumpBufferTime: 0.15
   coyoteTime: 0.15
   fallMultiplier: 1.4
   flapStrength: 30
@@ -33,4 +34,4 @@ MonoBehaviour:
   faceplantInputLockTime: 1
   maxFallVelocity: 20
   yVelocityBuffer: 10
-  deadThreshold: 2.5
+  deadThreshold: 1.5

@@ -16,6 +16,7 @@ public class DuckSettings : ScriptableObject
 [Range(10,25), Tooltip ("Changes Jump Height")] public float jumpForce = 17f;
 [Range(0,25), Tooltip ("Changes Max Speed in Air")] public float airMaxSpeed = 7f;
 [Range(0,50), Tooltip ("Changes Jump Movement in Air")] public float airControlStrength = 7f;
+[Range(0,100), Tooltip ("Changes Deceleration in Air")] public float airDeceleration = 50f;
 [Range (0,1), Tooltip ("Time in Seconds for Jump Buffer")] public float jumpBufferTime = 0.2f;
 [Range(0, 1), Tooltip ("Coyote Time In Seconds")] public float coyoteTime = 0.15f;
 [Range (0,10), Tooltip ("Gravity Adjust on Jump Fall")] public float fallMultiplier = 1.4f;
