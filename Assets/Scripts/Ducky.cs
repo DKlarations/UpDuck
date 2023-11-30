@@ -7,11 +7,6 @@ using UnityEngine.InputSystem;
 using System.Threading;
 using static UnityEngine.InputSystem.InputAction;
 
-
-
-
-
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -124,6 +119,9 @@ public class Ducky : MonoBehaviour
         #else
             transform.position = new Vector3 (PlayerPrefs.GetFloat("PlayerXLocation"), PlayerPrefs.GetFloat("PlayerYLocation"), 0);
         #endif  
+        
+        //Turn off Boxcast hitting triggers (this can be toggeled if needed)
+        Physics2D.queriesHitTriggers = false;
     }
     private void OnEnable()
     {

@@ -62,27 +62,29 @@ public class VacuumFunnel : MonoBehaviour
             var shape = suctionParticles.shape;
             shape.radius = 2.5f;
             var main = suctionParticles.main;
-            main.startSpeed = -2f;
-            
+            main.startSpeed = -1.5f;
+            main.startLifetime = .4f;
 
-            vacuumAudio.pitch = 1.15f;  //Change pitch of vacuum audio to simulate lack of suction
 
             polygonCollider.enabled = false;
             playerSprite.enabled = false;
             animator.Play(CAPTURED_ANIMATION);
             playerRb.velocity = Vector2.zero;
             playerRb.isKinematic = true;
-            player.transform.position = transform.position; // Move player to the center
             playerScript.canInput = false; // Disable player input
         
             // Move player to the ejection origin
             Vector3 ejectionOrigin = transform.position + ejectionAngleOffset;
-            player.transform.position = ejectionOrigin;
+            StartCoroutine(MoveToPositionOverTime(player, ejectionOrigin, 1.25f)); // 0.5 seconds for the movement duration
 
-             // Wait for .5 seconds
+            vacuumAudio.pitch = 1.15f;  //Change pitch of vacuum audio to simulate lack of suction
+            StartCoroutine(ChangePitchOverTime(1.15f, .5f));  // Change pitch to 1.15 over .5 second
             yield return new WaitForSeconds(.5f);
+
             vacuumAudio.pitch = 1.3f;
+            StartCoroutine(ChangePitchOverTime(1.3f, .5f));  // Change pitch to 1.3 over .5 second
             yield return new WaitForSeconds(.5f);
+
             AudioClip clipToPlay = ejectionSound;
             otherAudio.clip = clipToPlay;
             otherAudio.Play();
@@ -107,6 +109,36 @@ public class VacuumFunnel : MonoBehaviour
         }
     }
 
+    private IEnumerator ChangePitchOverTime(float targetPitch, float duration)
+    {
+        float time = 0;
+        float startPitch = vacuumAudio.pitch;
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+            // Ease-Out Sine calculation
+            t = Mathf.Sin(t * Mathf.PI * 0.5f);
+            vacuumAudio.pitch = Mathf.Lerp(startPitch, targetPitch, t);
+            yield return null;
+        }
+        vacuumAudio.pitch = targetPitch;
+    }
+    private IEnumerator MoveToPositionOverTime(GameObject player, Vector3 targetPosition, float duration)
+    {
+        float time = 0;
+        Vector3 startPosition = player.transform.position;
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+            // Ease-In-Out Sine calculation
+            t = -0.5f * (Mathf.Cos(Mathf.PI * t) - 1);
+            player.transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+            yield return null;
+        }
+        player.transform.position = targetPosition;
+    }
 
     private void ApplyEjectionForce(GameObject player)
     {
