@@ -56,8 +56,16 @@ public class VacuumFunnel : MonoBehaviour
         // Disable player's sprite, movement, and input
         if (playerSprite != null && playerRb != null && playerScript != null)
         {
+            //Change Suction Particles to Simulate the Vacuum Being "stuck"
+            var emission = suctionParticles.emission;
+            emission.rateOverTime = 250f;
+            var shape = suctionParticles.shape;
+            shape.radius = 2.5f;
+            var main = suctionParticles.main;
+            main.startSpeed = -2f;
             
-            vacuumAudio.pitch = 1.25f;  //Change pitch of vacuum audio to simulate lack of suction
+
+            vacuumAudio.pitch = 1.15f;  //Change pitch of vacuum audio to simulate lack of suction
 
             polygonCollider.enabled = false;
             playerSprite.enabled = false;
@@ -72,8 +80,10 @@ public class VacuumFunnel : MonoBehaviour
             player.transform.position = ejectionOrigin;
 
              // Wait for .5 seconds
-            yield return new WaitForSeconds(.25f);
-            AudioClip clipToPlay = suckedUpSound;
+            yield return new WaitForSeconds(.5f);
+            vacuumAudio.pitch = 1.3f;
+            yield return new WaitForSeconds(.5f);
+            AudioClip clipToPlay = ejectionSound;
             otherAudio.clip = clipToPlay;
             otherAudio.Play();
 
@@ -85,6 +95,10 @@ public class VacuumFunnel : MonoBehaviour
             playerScript.canInput = true; // Re-enable player input
 
             vacuumAudio.pitch = 1f;  //Change pitch back to normal
+            //CHANGE ALL PARTICLE VARIABLES BACK TO INITIAL VALUES
+            emission.rateOverTime = 750f;
+            shape.radius = 4f;
+            main.startSpeed = -4f;
         
 
             // Wait for .5 seconds before reenable
@@ -229,7 +243,7 @@ public class VacuumFunnel : MonoBehaviour
 
         Vector2 ejectionDirection = CalculateEjectionDirection();
         Vector3 ejectionOrigin = transform.position + ejectionAngleOffset; // Calculate ejection origin
-        Gizmos.color = Color.yellow;
+        Gizmos.color = Color.red;
         Gizmos.DrawLine(ejectionOrigin, ejectionOrigin + (Vector3)ejectionDirection * 2); // Draw line from ejection origin
     }
 

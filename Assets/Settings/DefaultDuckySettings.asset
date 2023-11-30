@@ -21,7 +21,7 @@ MonoBehaviour:
   jumpForce: 17
   airMaxSpeed: 7
   airControlStrength: 40
-  airDeceleration: 100
+  airDeceleration: 60
   jumpBufferTime: 0.15
   coyoteTime: 0.15
   fallMultiplier: 1.4

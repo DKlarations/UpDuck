@@ -345,9 +345,9 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Jumping;
         }
 
-        // Debugging feature: Fly upwards when 'P' key and 'I' are pressed together.
+        // Debugging feature: Fly upwards when 'U' key and 'P' are pressed together.
         #if UNITY_EDITOR
-        if (Input.GetKey(KeyCode.P) && Input.GetKey(KeyCode.I))
+        if (Input.GetKey(KeyCode.U) && Input.GetKey(KeyCode.P))
         {
             body.AddForce(Vector2.up, ForceMode2D.Impulse);
             OnLanding();

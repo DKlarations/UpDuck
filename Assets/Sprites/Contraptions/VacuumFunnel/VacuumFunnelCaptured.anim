@@ -22,15 +22,15 @@ AnimationClip:
     curve:
     - time: 0
       value: {fileID: -4033974644550250676, guid: 4afc3f227151bdc4e890725311297d3f, type: 3}
-    - time: 0.11666667
+    - time: 0.16666667
       value: {fileID: -4950468440386374168, guid: 35999468c080b2d4fadab2118a228718, type: 3}
-    - time: 0.23333333
+    - time: 0.56666666
       value: {fileID: -4487503077324884557, guid: d31d70dfbce7b274b850853e447dce43, type: 3}
-    - time: 0.33333334
+    - time: 1.1833333
       value: {fileID: -805505270819615359, guid: 0f88a9b1eea110648bf2035889213897, type: 3}
-    - time: 0.46666667
+    - time: 1.2666667
       value: {fileID: -8614433288090769549, guid: d6d25bc899bb6754488f3d6b310694ee, type: 3}
-    - time: 0.53333336
+    - time: 1.3666667
       value: {fileID: -1799639670147786405, guid: 46f7ef220e158814bb181762c57c3f46, type: 3}
     attribute: m_Sprite
     path: 
@@ -65,7 +65,7 @@ AnimationClip:
     m_AdditiveReferencePoseClip: {fileID: 0}
     m_AdditiveReferencePoseTime: 0
     m_StartTime: 0
-    m_StopTime: 0.55
+    m_StopTime: 1.3833333
     m_OrientationOffsetY: 0
     m_Level: 0
     m_CycleOffset: 0
@@ -85,7 +85,7 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.5
+  - time: 1.25
     functionName: ActivateEjectionParticles
     data: 
     objectReferenceParameter: {fileID: 0}
