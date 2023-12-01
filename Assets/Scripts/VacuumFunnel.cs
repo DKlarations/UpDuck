@@ -35,38 +35,35 @@ public class VacuumFunnel : MonoBehaviour
     const string ACTIVATED_ANIMATION = "VacuumFunnelActivated";
     const string CAPTURED_ANIMATION = "VacuumFunnelCaptured";
 
-
     private void Start()
     {
         animator = GetComponent<Animator>();
         ConfigureParticleSystem();
     }   
-
     private void OnTriggerEnter2D(Collider2D collider)
     {
-            StartCoroutine(HandlePlayerInteraction(collider.gameObject));
+            StartCoroutine(PlayerGetsSuckedUp(collider.gameObject));
     }
-    private IEnumerator HandlePlayerInteraction(GameObject player)
+    private IEnumerator PlayerGetsSuckedUp(GameObject player)
     {
         // Access the required components
         SpriteRenderer playerSprite = player.GetComponent<SpriteRenderer>();
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
         Ducky playerScript = player.GetComponent<Ducky>();
+        
 
-        // Disable player's sprite, movement, and input
+        
         if (playerSprite != null && playerRb != null && playerScript != null)
         {
             //Change Suction Particles to Simulate the Vacuum Being "stuck"
             var emission = suctionParticles.emission;
-            emission.rateOverTime = 250f;
+            emission.rateOverTime = 150f;
             var shape = suctionParticles.shape;
             shape.radius = 2.5f;
             var main = suctionParticles.main;
             main.startSpeed = -1.5f;
-            main.startLifetime = .4f;
-
-
-            polygonCollider.enabled = false;
+            main.startLifetime = .5f;
+            
             playerSprite.enabled = false;
             animator.Play(CAPTURED_ANIMATION);
             playerRb.velocity = Vector2.zero;
@@ -74,7 +71,7 @@ public class VacuumFunnel : MonoBehaviour
             playerScript.canInput = false; // Disable player input
         
             // Move player to the ejection origin
-            Vector3 ejectionOrigin = transform.position + ejectionAngleOffset;
+            Vector3 ejectionOrigin = new Vector3 (transform.position.x,transform.position.y, 0)  + ejectionAngleOffset;
             StartCoroutine(MoveToPositionOverTime(player, ejectionOrigin, 1.25f)); // 0.5 seconds for the movement duration
 
             vacuumAudio.pitch = 1.15f;  //Change pitch of vacuum audio to simulate lack of suction
@@ -93,22 +90,29 @@ public class VacuumFunnel : MonoBehaviour
 
             playerSprite.enabled = true;
             playerRb.isKinematic = false;
-            ApplyEjectionForce(player);
-            playerScript.canInput = true; // Re-enable player input
+            circleCollider.enabled = false; // Turn off the Circle collider - should turn off the vacuum
+            polygonCollider.enabled = false;// Turn off Vacuum's Collider  
+
+            playerScript.ChangeToCannonball();          
+            ApplyEjectionForce(player);  
+            playerScript.shouldJump = false;
+            playerScript.moveDust.Play();   
+
+            playerScript.canInput = true;   // Re-enable player input
 
             vacuumAudio.pitch = 1f;  //Change pitch back to normal
             //CHANGE ALL PARTICLE VARIABLES BACK TO INITIAL VALUES
             emission.rateOverTime = 750f;
-            shape.radius = 4f;
-            main.startSpeed = -4f;
+            shape.radius = attractorRange * 1.5f;
+            main.startSpeed = -6f;
         
 
             // Wait for .5 seconds before reenable
             yield return new WaitForSeconds(.5f);
+            circleCollider.enabled = true; // Turn Circle Collider back on
             polygonCollider.enabled = true;
         }
     }
-
     private IEnumerator ChangePitchOverTime(float targetPitch, float duration)
     {
         float time = 0;
@@ -173,10 +177,9 @@ public class VacuumFunnel : MonoBehaviour
 
     public void HandleExitTrigger(Collider2D collider)
     {
+        animator.Play(IDLE_ANIMATION);
         if (collider.CompareTag("Player")) // Check if the collider is the player
         {
-            animator.Play(IDLE_ANIMATION);
-
             //Play Vacuum Start Sounds
             AudioClip clipToPlay = vacuumStop;
             vacuumAudio.clip = clipToPlay;
@@ -199,7 +202,6 @@ public class VacuumFunnel : MonoBehaviour
             vacuumAudio.clip = clipToPlay;
             vacuumAudio.Play();
         }
-        
 
         if (rb != null)
         {
@@ -255,7 +257,7 @@ public class VacuumFunnel : MonoBehaviour
             var shape = suctionParticles.shape;
             shape.shapeType = ParticleSystemShapeType.Circle;
 
-            shape.radius = attractorRange;
+            shape.radius = attractorRange * 1.5f;
             shape.arc = attractorSpanAngle;
 
             // Calculate and set the rotation angle
@@ -265,8 +267,8 @@ public class VacuumFunnel : MonoBehaviour
     }
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(transform.position, attractorRange);
+    //    Gizmos.color = Color.blue;
+    //    Gizmos.DrawWireSphere(transform.position, attractorRange);
 
         float startAngle = attractorCenterAngle - (attractorSpanAngle / 2f);
         float endAngle = attractorCenterAngle + (attractorSpanAngle / 2f);
@@ -297,7 +299,6 @@ public class VacuumFunnel : MonoBehaviour
 
         // Adjust angle interpretation (if needed)
         // Unity's coordinate system uses clockwise rotation, with 0 degrees pointing to the right.
-        // If your angles are defined differently, you might need to adjust this conversion.
         return new Vector2(Mathf.Cos(angleInRadians), Mathf.Sin(angleInRadians));
     }
 }

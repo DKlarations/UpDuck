@@ -15,7 +15,7 @@ using UnityEditor;
 public class Ducky : MonoBehaviour
 {
 
-    enum DuckyState { Idle, Walking, Running, Jumping, Flapping, Wave, WallSlide, Falling, Tired, TiredFall, Dead } // The state machine variable
+    enum DuckyState { Idle, Walking, Running, Jumping, Flapping, Wave, CannonBall, WallSlide, Falling, Tired, TiredFall, Dead } // The state machine variable
     private DuckyState currentState = DuckyState.Idle;
     private CinemachineImpulseSource impulseSource;
     public UI_StatusIndicator status;
@@ -47,15 +47,17 @@ public class Ducky : MonoBehaviour
     [Header("Movement")]
     private float flapDuration = 0.0f;
     private float jumpBufferCounter;
+    private float wallJumpBufferCounter = 0f;
     private float pushCooldownTimer = 0f;
     private float idleTimer = 0f;
     private float idleTimeBeforeWave = 8.1f; //Make sure to keep the .1 on any value
 
     private string currentAnimation = "Ducky Idle";
     private Rigidbody2D body;
-    private bool shouldJump;
+    public bool shouldJump;
     private bool onGround;
     private bool facingRight = true;
+    private bool lastWallRight;
     public bool canInput = true;
     [HideInInspector]public float horizontalPush = 0f;
 
@@ -93,6 +95,7 @@ public class Ducky : MonoBehaviour
     const string DUCKY_TIRED = "Ducky Tired";
     const string DUCKY_TIRED_FALL = "Ducky Tired Fall";
     const string DUCKY_WALL_SLIDE = "Ducky WallSlide";
+    const string DUCKY_CANNONBALL = "Ducky Roll";
     const string DUCKY_DEAD = "Ducky Dead";
     const string DUCKY_WALK = "Ducky Walk";
     const string DUCKY_RUN = "Ducky Run";
@@ -113,6 +116,8 @@ public class Ducky : MonoBehaviour
         animator = GetComponent<Animator>();
         impulseSource = GetComponent<CinemachineImpulseSource>();
         controls = new PlayerControls();
+
+        body.velocity = Vector2.zero;
 
         #if UNITY_EDITOR
             transform.position = transform.position;
@@ -233,12 +238,8 @@ public class Ducky : MonoBehaviour
                         && shouldJump));
         } */
 
-        //Jump Logic
-        if (isOnWall && jumpBufferCounter > 0f)
-        {
-            HandleWallJump();
-        }
-        
+        //Jumps Logic
+        HandleWallJump();
         HandleJump();
         
 
@@ -330,9 +331,15 @@ public class Ducky : MonoBehaviour
     {
         UpdateMovement();
 
-        RaycastHit2D hitRight = Physics2D.BoxCast(transform.position + (Vector3)wallBoxCastOffset, wallBoxCastSize, 0f, Vector2.right, wallBoxCastDistance, wallLayer);
-        RaycastHit2D hitLeft = Physics2D.BoxCast(transform.position + (Vector3)wallBoxCastOffset, wallBoxCastSize, 0f, Vector2.left, wallBoxCastDistance, wallLayer);
-        isOnWall = (hitRight.collider != null || hitLeft.collider != null) && !onGround;
+        // Determine the direction for the wall box cast
+        Vector2 wallCastDirection = facingRight ? Vector2.right : Vector2.left;
+
+        // Perform the box cast for wall detection
+        RaycastHit2D wallHit = Physics2D.BoxCast(transform.position + (Vector3)wallBoxCastOffset, wallBoxCastSize, 0f, wallCastDirection, wallBoxCastDistance, wallLayer);
+        isOnWall = wallHit.collider != null && !onGround;
+
+        if (!isOnWall)
+            wallJumpBufferCounter -= Time.fixedDeltaTime;
 
         if (isOnWall && (currentState != DuckyState.TiredFall || currentState == DuckyState.Dead))
         {
@@ -390,6 +397,10 @@ public class Ducky : MonoBehaviour
 
             case DuckyState.TiredFall:
                 ChangeAnimationState(DUCKY_TIRED_FALL);
+                break;
+
+            case DuckyState.CannonBall:
+                ChangeAnimationState(DUCKY_CANNONBALL);
                 break;
 
             case DuckyState.Wave:
@@ -566,25 +577,29 @@ public class Ducky : MonoBehaviour
     }
     private void HandleWallJump()
     {
-        Vector2 jumpDirection = CalculateWallJumpDirection();
-        body.velocity = new Vector2(0, 0); // Reset existing velocity
-        body.AddForce(jumpDirection * settings.wallJumpForce, ForceMode2D.Impulse);
+        if (wallJumpBufferCounter > 0f && jumpBufferCounter > 0f)
+        {
+            Vector2 jumpDirection = CalculateWallJumpDirection();
+            body.velocity = new Vector2(0, 0); // Reset existing velocity
+            body.AddForce(jumpDirection * settings.wallJumpForce, ForceMode2D.Impulse);
 
-        currentState = DuckyState.Jumping; // Transition to jumping state
-        // Create Dust Particles
-        moveDust.Play();
-        // Play random jump sound.
-        PlayRandomSound(jumpSounds);
+            currentState = DuckyState.Jumping; // Transition to jumping state
+            // Create Dust Particles
+            moveDust.Play();
+            // Play random jump sound.
+            PlayRandomSound(jumpSounds);
 
-        // Reset timers and flags
-        shouldJump = false;
-        jumpBufferCounter = 0f;
+            // Reset timers and flags
+            shouldJump = false;
+            jumpBufferCounter = 0f;
+            wallJumpBufferCounter = 0f;
+        }
     }
     private Vector2 CalculateWallJumpDirection()
     {
         // Calculate the jump direction based on the wall slide direction
         float angleInRadians = settings.wallJumpAngle * Mathf.Deg2Rad;
-        float x = facingRight ? -Mathf.Cos(angleInRadians) : Mathf.Cos(angleInRadians);
+        float x = lastWallRight ? -Mathf.Cos(angleInRadians) : Mathf.Cos(angleInRadians);
         float y = Mathf.Sin(angleInRadians);
 
         return new Vector2(x, y).normalized;
@@ -599,15 +614,22 @@ public class Ducky : MonoBehaviour
     private void HandleWallSlide()
     {
         currentState = DuckyState.WallSlide;
+        lastWallRight = facingRight;    //Adding this to 'remember' the last wall touched for the wall jump
 
         Vector2 slideForce = new Vector2(0, settings.wallSlideSpeed);
         body.AddForce(slideForce, ForceMode2D.Force);
+
+        wallJumpBufferCounter = settings.wallJumpBufferTime; //Wall Jump Buffer Enabled
 
         flapDuration = 0.0f; // Reset flapDuration to maximum
         airborneTime = 0f;   // Reset airborneTime to Zero
         freefallTime = 0;    // Reset freefallTime to Zero
     }
     private bool IsFallingState => currentState == DuckyState.Falling || currentState == DuckyState.TiredFall;
+    public void ChangeToCannonball()
+    {
+        currentState = DuckyState.CannonBall;
+    }
     private AudioClip lastPlayedClip;
     private void PlayRandomSound(AudioClip[] clips)
     {
@@ -782,7 +804,6 @@ public class Ducky : MonoBehaviour
             footStepMaterial = groundMaterial.Empty;
         }
     }
-
     private void OnDrawGizmos()
     {
         // GROUND BOX CAST
@@ -809,14 +830,14 @@ public class Ducky : MonoBehaviour
         Gizmos.color = isOnWall ? Color.green : Color.red;
 
         // Right-side gizmo
-        Vector3 boxCastOriginRight = transform.position + (Vector3)wallBoxCastOffset + Vector3.right * wallBoxCastDistance / 2;
-        Vector3 sizeRight = new(wallBoxCastSize.x, wallBoxCastSize.y, 1);
-        Gizmos.DrawWireCube(boxCastOriginRight, sizeRight);
+        Vector3 wallBoxCastOrigin = transform.position + (Vector3)wallBoxCastOffset + (facingRight ? Vector3.right : Vector3.left) * wallBoxCastDistance / 2;
+        Vector3 wallBoxCastSize3D = new Vector3(wallBoxCastSize.x, wallBoxCastSize.y, 1);
+        Gizmos.DrawWireCube(wallBoxCastOrigin, wallBoxCastSize3D);
 
         // Left-side gizmo
-        Vector3 boxCastOriginLeft = transform.position + (Vector3)wallBoxCastOffset + Vector3.left * wallBoxCastDistance / 2;
+        /* Vector3 boxCastOriginLeft = transform.position + (Vector3)wallBoxCastOffset + Vector3.left * wallBoxCastDistance / 2;
         Vector3 sizeLeft = new(wallBoxCastSize.x, wallBoxCastSize.y, 1);
-        Gizmos.DrawWireCube(boxCastOriginLeft, sizeLeft);
+        Gizmos.DrawWireCube(boxCastOriginLeft, sizeLeft); */
 
     }
 

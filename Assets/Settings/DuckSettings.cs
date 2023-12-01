@@ -26,6 +26,7 @@ public class DuckSettings : ScriptableObject
 [Range(0,50), Tooltip ("Changes Wall Jump Strength")] public float wallJumpForce = 10f;
 [Range(0,180), Tooltip ("Changes Wall Jump Angle")] public float wallJumpAngle = 45f;
 [Range(0,25), Tooltip ("Changes Wall Slide Speed")] public float wallSlideSpeed = 2f;
+[Range (0,1), Tooltip ("Time in Seconds for Wall Jump Buffer")] public float wallJumpBufferTime = 0.1f;
 [Header("Other Settings")]
 [Range(45, 90), Tooltip ("Highest Climable Angle")] public float steepestClimbableAngle = 60f;
 [Range (0,10), Tooltip ("Time Faceplant Locks Input")] public float faceplantInputLockTime = 1f;

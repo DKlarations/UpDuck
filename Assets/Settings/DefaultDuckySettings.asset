@@ -30,6 +30,7 @@ MonoBehaviour:
   wallJumpForce: 17
   wallJumpAngle: 60
   wallSlideSpeed: 25
+  wallJumpBufferTime: 0.1
   steepestClimbableAngle: 75
   faceplantInputLockTime: 1
   maxFallVelocity: 20

@@ -52,9 +52,6 @@ public class TimerPlatform : MonoBehaviour
         {
             StartCoroutine(EnablePlatforms());
 
-            //Play ON Animation
-            animator.Play(ON_ANIMATION);
-
             platformsAreOn = true;
         }
     }
