@@ -10,6 +10,7 @@ public class Cannon : MonoBehaviour
     [SerializeField] [Range(0, 360)] private float ejectionAngleDegrees = 45f;
 
     public ParticleSystem ejectionParticles;
+    public ParticleSystem duckDustParticles;
     // Audio Components
     [Header("AUDIO")]
     public AudioSource cannonAudio;
@@ -67,6 +68,7 @@ public class Cannon : MonoBehaviour
             
             playerSprite.enabled = true;
             playerRb.isKinematic = false;
+            IncreaseDuckParticles();
             
 
             ApplyEjectionForce(player); // Launch the player
@@ -83,6 +85,9 @@ public class Cannon : MonoBehaviour
 
             // Change animation back to idle
             animator.Play(IDLE_ANIMATION);
+
+            yield return new WaitForSeconds(2f);
+            DecreaseDuckParticles();
             polygonCollider.enabled = true;// Turn on Cannon's Collider
         }
     }
@@ -117,4 +122,28 @@ public class Cannon : MonoBehaviour
         float angleInRadians = ejectionAngleDegrees * Mathf.Deg2Rad;
         return new Vector2(Mathf.Cos(angleInRadians), Mathf.Sin(angleInRadians)).normalized;
     }
+    private void IncreaseDuckParticles()
+    {
+        //Change Suction Particles to Simulate the Vacuum Being "stuck"
+        duckDustParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);//Stop so I can change duration
+        float scaleFactor = ejectionForce / 50f; //Calculate scale based on arbitrary number
+
+        var main = duckDustParticles.main;
+        main.startLifetime = scaleFactor * .5f;
+        main.duration = scaleFactor * 1f;
+
+        var emission = duckDustParticles.emission;
+        emission.rateOverTime = scaleFactor * 400f;
+    }
+    private void DecreaseDuckParticles()
+    {
+        //Change Suction Particles to Simulate the Vacuum Being "stuck"
+        duckDustParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);//Stop so I can change duration
+        var main = duckDustParticles.main;
+        main.startLifetime = .5f;
+        main.duration = .1f;
+        var emission = duckDustParticles.emission;
+        emission.rateOverTime = 100f;
+    }
+
 }
