@@ -94,11 +94,13 @@ public class VacuumFunnel : MonoBehaviour
             polygonCollider.enabled = false;// Turn off Vacuum's Collider  
 
             playerScript.ChangeToCannonball();          
+            playerScript.ResetAirTime(); //Change air variables to 0
             ApplyEjectionForce(player);  
             playerScript.shouldJump = false;
             playerScript.moveDust.Play();   
 
             playerScript.canInput = true;   // Re-enable player input
+            playerScript.ResetAirTime(); //Change air variables to 0
 
             vacuumAudio.pitch = 1f;  //Change pitch back to normal
             //CHANGE ALL PARTICLE VARIABLES BACK TO INITIAL VALUES

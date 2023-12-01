@@ -4,6 +4,7 @@ using UnityEngine;
 public class Cannon : MonoBehaviour
 {
     public Animator animator;
+    public PolygonCollider2D polygonCollider;
     [SerializeField] private Vector3 ejectionAngleOffset;
     [SerializeField] private float ejectionForce = 10f;
     [SerializeField] [Range(0, 360)] private float ejectionAngleDegrees = 45f;
@@ -46,6 +47,7 @@ public class Cannon : MonoBehaviour
             animator.Play(FIRING_ANIMATION);
             playerRb.velocity = Vector2.zero;
             playerRb.isKinematic = true;
+            polygonCollider.enabled = false;// Turn off Cannon's Collider to avoid Grounded state
             playerScript.canInput = false; // Disable player input
 
             // Move player to the ejection origin
@@ -55,8 +57,9 @@ public class Cannon : MonoBehaviour
             // Play cannon load audio
             cannonAudio.clip = cannonLoad;
             cannonAudio.Play();
-            
+
             playerScript.ChangeToCannonball();
+            playerScript.ResetAirTime(); //Change air variables to 0
             
             // POSSIBLY Wait for the loading audio to finish (cannonLoad.Length)
             yield return new WaitForSeconds(1f);
@@ -65,13 +68,14 @@ public class Cannon : MonoBehaviour
             playerSprite.enabled = true;
             playerRb.isKinematic = false;
             
-            
+
             ApplyEjectionForce(player); // Launch the player
             playerScript.moveDust.Play(); 
             ejectionParticles.Play();
-
+            playerScript.ResetAirTime(); //Resetting this twice to avoid TiredFall Behavior
             playerScript.shouldJump = false;
             playerScript.canInput = true; // Re-enable player input
+            
 
             // Play cannon fire audio
             cannonAudio.clip = cannonFire;
@@ -79,6 +83,7 @@ public class Cannon : MonoBehaviour
 
             // Change animation back to idle
             animator.Play(IDLE_ANIMATION);
+            polygonCollider.enabled = true;// Turn on Cannon's Collider
         }
     }
 

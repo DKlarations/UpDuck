@@ -314,7 +314,6 @@ public class Ducky : MonoBehaviour
             PlayerPrefs.SetFloat("PlayerXLocation", transform.position.x);
             PlayerPrefs.SetFloat("PlayerYLocation", transform.position.y);
         }
-
     }
 
     private void UpdateInputs()
@@ -479,7 +478,6 @@ public class Ducky : MonoBehaviour
                     HandleDeceleration(deceleration, velocityStopThreshold);
                 }
             }
-            
         }
 
         // Change the character facing direction
@@ -503,12 +501,9 @@ public class Ducky : MonoBehaviour
     }
     public void ApplyPushForce(Vector2 force, float cooldownTime)
     {
-        flapDuration = 0.0f;
-
         currentState = DuckyState.Idle;
         currentState = DuckyState.Jumping;
-        airborneTime = 0f;   // Reset airborneTime to Zero
-        freefallTime = 0f;
+        ResetAirTime(); //Reset Air Variables
 
         // Apply the push force
         body.AddForce(force, ForceMode2D.Impulse);
@@ -530,9 +525,7 @@ public class Ducky : MonoBehaviour
     public void OnLanding()
     {
         cameraFollow.AdjustCameraForJump(!onGround);
-        flapDuration = 0.0f; // Reset flapDuration to maximum
-        airborneTime = 0f;   // Reset airborneTime to Zero
-        freefallTime = 0f;   // Reset freefallTime to Zero
+        ResetAirTime();      // Reset all Air Variables
         shouldJump = true;   // Reset the Should Jump Flag
     }
      private void UpdateJumpBuffer()
@@ -621,14 +614,18 @@ public class Ducky : MonoBehaviour
 
         wallJumpBufferCounter = settings.wallJumpBufferTime; //Wall Jump Buffer Enabled
 
-        flapDuration = 0.0f; // Reset flapDuration to maximum
-        airborneTime = 0f;   // Reset airborneTime to Zero
-        freefallTime = 0;    // Reset freefallTime to Zero
+        ResetAirTime(); // Reset Air Variables to 0
     }
     private bool IsFallingState => currentState == DuckyState.Falling || currentState == DuckyState.TiredFall;
     public void ChangeToCannonball()
     {
         currentState = DuckyState.CannonBall;
+    }
+    public void ResetAirTime()
+    {
+        flapDuration = 0f;
+        airborneTime = 0f;
+        freefallTime = 0f;
     }
     private AudioClip lastPlayedClip;
     private void PlayRandomSound(AudioClip[] clips)
@@ -760,14 +757,10 @@ public class Ducky : MonoBehaviour
     }
     public void VerticalBounce(float bounceForce)
     {
-        // Reset flapDuration to 0 to avoid Tired and TiredFall behavior
-        flapDuration = 0.0f;
+        ResetAirTime();     // Reset all Air Variables to Zero
 
         currentState = DuckyState.Idle;
         currentState = DuckyState.Jumping;
-
-        airborneTime = 0f;   // Reset airborneTime to Zero
-        freefallTime = 0f;   // Reset freefallTime to Zero
 
         float totalForce = bounceForce;
 
