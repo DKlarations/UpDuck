@@ -9,8 +9,8 @@ public class Cannon : MonoBehaviour
     [SerializeField] private float ejectionForce = 10f;
     [SerializeField] [Range(0, 360)] private float ejectionAngleDegrees = 45f;
 
-    public ParticleSystem ejectionParticles;
-    public ParticleSystem duckDustParticles;
+    public ParticleSystem featherParticles;
+    public ParticleSystem duckCannonSmokeParticles;
     // Audio Components
     [Header("AUDIO")]
     public AudioSource cannonAudio;
@@ -72,8 +72,8 @@ public class Cannon : MonoBehaviour
             
 
             ApplyEjectionForce(player); // Launch the player
-            playerScript.moveDust.Play(); 
-            ejectionParticles.Play();
+            duckCannonSmokeParticles.Play();
+            featherParticles.Play();
             playerScript.ResetAirTime(); //Resetting this twice to avoid TiredFall Behavior
             playerScript.shouldJump = false;
             playerScript.canInput = true; // Re-enable player input
@@ -86,7 +86,7 @@ public class Cannon : MonoBehaviour
             // Change animation back to idle
             animator.Play(IDLE_ANIMATION);
 
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1.5f);
             DecreaseDuckParticles();
             polygonCollider.enabled = true;// Turn on Cannon's Collider
         }
@@ -125,24 +125,24 @@ public class Cannon : MonoBehaviour
     private void IncreaseDuckParticles()
     {
         //Change Suction Particles to Simulate the Vacuum Being "stuck"
-        duckDustParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);//Stop so I can change duration
+        duckCannonSmokeParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);//Stop so I can change duration
         float scaleFactor = ejectionForce / 50f; //Calculate scale based on arbitrary number
 
-        var main = duckDustParticles.main;
+        var main = duckCannonSmokeParticles.main;
         main.startLifetime = scaleFactor * .5f;
         main.duration = scaleFactor * 1f;
 
-        var emission = duckDustParticles.emission;
+        var emission = duckCannonSmokeParticles.emission;
         emission.rateOverTime = scaleFactor * 400f;
     }
     private void DecreaseDuckParticles()
     {
         //Change Suction Particles to Simulate the Vacuum Being "stuck"
-        duckDustParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);//Stop so I can change duration
-        var main = duckDustParticles.main;
+        duckCannonSmokeParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);//Stop so I can change duration
+        var main = duckCannonSmokeParticles.main;
         main.startLifetime = .5f;
         main.duration = .1f;
-        var emission = duckDustParticles.emission;
+        var emission = duckCannonSmokeParticles.emission;
         emission.rateOverTime = 100f;
     }
 
