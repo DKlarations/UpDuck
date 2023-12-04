@@ -86,12 +86,14 @@ public class VacuumFunnel : MonoBehaviour
             otherAudio.clip = clipToPlay;
             otherAudio.Play();
 
+            polygonCollider.enabled = false;// Turn off Vacuum's Collider  
+
             yield return new WaitForSeconds(.25f);
 
             playerSprite.enabled = true;
             playerRb.isKinematic = false;
             circleCollider.enabled = false; // Turn off the Circle collider - should turn off the vacuum
-            polygonCollider.enabled = false;// Turn off Vacuum's Collider  
+            
 
             playerScript.ChangeToCannonball();          
             playerScript.ResetAirTime(); //Change air variables to 0
