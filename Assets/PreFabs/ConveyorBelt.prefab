@@ -441,7 +441,7 @@ GameObject:
   - component: {fileID: 6885965486560939421}
   m_Layer: 3
   m_Name: ConveyorBelt
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 7250588514170254948, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

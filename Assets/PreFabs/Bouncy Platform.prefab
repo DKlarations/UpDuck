@@ -184,7 +184,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88fd0a8345a0a9c49ad5654720b6c56f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bounceForce: 25
+  bounceForce: 28
   audioPlayer: {fileID: 2815805605946294295}
   boingSounds: {fileID: 8300000, guid: 7aed158b223e07647b1f7b0091d57754, type: 3}
   animator: {fileID: 6711681555291112812}

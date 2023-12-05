@@ -199,16 +199,16 @@ public class VacuumFunnel : MonoBehaviour
     {
         Rigidbody2D rb = collider.GetComponent<Rigidbody2D>();
 
-        if (!vacuumAudio.isPlaying)
+        if (collider.CompareTag("Player") && rb != null)
         {
-            //Play Vacuum On Sounds
-            AudioClip clipToPlay = vacuumOn;
-            vacuumAudio.clip = clipToPlay;
-            vacuumAudio.Play();
-        }
+            if (!vacuumAudio.isPlaying)
+            {
+                //Play Vacuum On Sounds
+                AudioClip clipToPlay = vacuumOn;
+                vacuumAudio.clip = clipToPlay;
+                vacuumAudio.Play();
+            }
 
-        if (rb != null)
-        {
             Vector2 directionToCenter = (transform.position - collider.transform.position).normalized;
             float distanceToCenter = Vector2.Distance(transform.position, collider.transform.position);
 
