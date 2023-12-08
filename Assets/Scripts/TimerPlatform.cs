@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TimerPlatform : MonoBehaviour
 {
-    public GameObject[] platformsToEnable;
+    [SerializeField] private List<GameObject> platformsToEnable = new List<GameObject>();
     private SpriteRenderer[] renderers;
     private BoxCollider2D[] colliders;
     public Animator[] hiddenPlatformAnimators;
@@ -30,11 +30,11 @@ public class TimerPlatform : MonoBehaviour
     {
         animator = GetComponent<Animator>();
 
-        renderers = new SpriteRenderer[platformsToEnable.Length];
-        colliders = new BoxCollider2D[platformsToEnable.Length];
-        hiddenPlatformAnimators = new Animator[platformsToEnable.Length];
+        renderers = new SpriteRenderer[platformsToEnable.Count];
+        colliders = new BoxCollider2D[platformsToEnable.Count];
+        hiddenPlatformAnimators = new Animator[platformsToEnable.Count];
 
-        for (int i = 0; i < platformsToEnable.Length; i++)
+        for (int i = 0; i < platformsToEnable.Count; i++)
         {
             renderers[i] = platformsToEnable[i].GetComponent<SpriteRenderer>();
             colliders[i] = platformsToEnable[i].GetComponent<BoxCollider2D>();
@@ -48,10 +48,10 @@ public class TimerPlatform : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D collider)
     {
-        if (collider.gameObject.name == "Ducky" && !platformsAreOn)
+        if (!collider.gameObject.CompareTag("Player")) return; // Ensure the collided object is the player
+        if (!platformsAreOn)
         {
             StartCoroutine(EnablePlatforms());
-
             platformsAreOn = true;
         }
     }
@@ -121,24 +121,18 @@ public class TimerPlatform : MonoBehaviour
     }
     private void SetPlatformsActive()
     {
-        foreach (var platform in platformsToEnable)
+        for (int i = 0; i < platformsToEnable.Count; i++)
         {
-            platform.GetComponent<SpriteRenderer>().enabled = true;
-            platform.GetComponent<BoxCollider2D>().enabled = true;
-            platform.GetComponent<Animator>().Play(HIDDEN_PLATFORM_ON_ANIMATION);    
+            renderers[i].enabled = true;
+            colliders[i].enabled = true;
+            hiddenPlatformAnimators[i].Play(HIDDEN_PLATFORM_ON_ANIMATION);
         }
     }
     private void SetPlatformsInactive()
     {
-        foreach (var platform in platformsToEnable)
+        foreach (Animator hiddenAnimator in hiddenPlatformAnimators)
         {
-            platform.GetComponent<Animator>().Play(HIDDEN_PLATFORM_OFF_ANIMATION);
+            hiddenAnimator.Play(HIDDEN_PLATFORM_OFF_ANIMATION);
         }
     }
-    void TriggerAnimationAtInterval(int intervalIndex)
-    {
-        // Trigger the appropriate animation based on the interval index
-        // This is where you'll decide how to trigger the correct animation
-        // Example: animator.Play("AnimationState_" + intervalIndex);
-    } 
 }

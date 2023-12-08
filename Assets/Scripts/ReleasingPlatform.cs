@@ -10,10 +10,10 @@ public class PlatformController : MonoBehaviour
     [SerializeField] private float delayBeforeEnable = 2.0f; // Delay before re-enabling (adjust as needed)
     private bool isNotBroken = true;
 
-    public AudioSource audioPlayer;
-    public AudioClip iceCrackingSounds;
-    public AudioClip iceReturningSounds;
-    public Animator animator;
+    [SerializeField] private AudioSource audioPlayer;
+    [SerializeField] private AudioClip iceCrackingSounds;
+    [SerializeField] private AudioClip iceReturningSounds;
+    [SerializeField] private Animator animator;
     //================
     //Animation States
     //================

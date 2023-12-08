@@ -5,12 +5,12 @@ using UnityEngine;
 
 public class RevealerPlatform : MonoBehaviour
 {
-    public GameObject[] platformsToEnable;
-    private SpriteRenderer[] renderers;
-    public AudioSource audioPlayer;
-    public AudioClip platformOnSounds;
-    public AudioClip platformOffSounds;
-    public Animator animator;
+    [SerializeField] private List<GameObject> platformsToEnable = new List<GameObject>();
+    private List<SpriteRenderer> renderers = new List<SpriteRenderer>();
+    [SerializeField] private AudioSource audioPlayer;
+    [SerializeField] private AudioClip platformOnSounds;
+    [SerializeField] private AudioClip platformOffSounds;
+    [SerializeField] private Animator animator;
     //================//
     //Animation States//
     //================//
@@ -19,51 +19,51 @@ public class RevealerPlatform : MonoBehaviour
 
     void Start()
     {
-        // Initialize Collider2D and SpriteRenderer arrays
-        renderers = new SpriteRenderer[platformsToEnable.Length];
-
-        for (int i = 0; i < platformsToEnable.Length; i++)
+        // Initialize SpriteRenderer list
+        foreach (GameObject platform in platformsToEnable)
         {
-            renderers[i] = platformsToEnable[i].GetComponent<SpriteRenderer>();
-            
+            SpriteRenderer renderer = platform.GetComponent<SpriteRenderer>();
+            if (renderer != null)
+            {
+                renderers.Add(renderer);
+            }
         }
         PreloadAudio();
     }
 
     void OnTriggerEnter2D(Collider2D collider)
     {
+        if (!collider.gameObject.CompareTag("Player")) return;
+
         // Enable platforms when something enters the trigger
-        if (collider.gameObject.name == "Ducky")
-        {
-            SetPlatformsVisible(true);
+        SetPlatformsVisible(true);
 
-            animator.Play(ON_ANIMATION);
+        animator.Play(ON_ANIMATION);
 
-            AudioClip clipToPlay = platformOnSounds;
-            audioPlayer.clip = clipToPlay;
-            audioPlayer.Play(); 
-        }
+        audioPlayer.clip = platformOnSounds;
+        audioPlayer.Play(); 
     }
+
     void OnTriggerExit2D(Collider2D collider)
     {
-        if (collider.gameObject.name == "Ducky")
-        {
-            SetPlatformsVisible(false);
+        if (!collider.gameObject.CompareTag("Player")) return;
 
-            animator.Play(OFF_ANIMATION);
+        SetPlatformsVisible(false);
 
-            AudioClip clipToPlay = platformOffSounds;
-            audioPlayer.clip = clipToPlay;
-            audioPlayer.Play(); 
-        }
+        animator.Play(OFF_ANIMATION);
+
+        audioPlayer.clip = platformOffSounds;
+        audioPlayer.Play(); 
     }
+
     private void SetPlatformsVisible(bool active)
     {
-        foreach (var platform in platformsToEnable)
+        foreach (SpriteRenderer renderer in renderers)
         {
-            platform.GetComponent<SpriteRenderer>().enabled = active;
+            renderer.enabled = active;
         }
     }
+
     private void PreloadAudio()
     {
         // Temporarily save the original volume
@@ -83,6 +83,3 @@ public class RevealerPlatform : MonoBehaviour
         audioPlayer.volume = originalVolume;
     }
 }
-
-
-

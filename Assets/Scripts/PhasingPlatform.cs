@@ -4,15 +4,15 @@ using UnityEngine;
 
 public class PhasingPlatform : MonoBehaviour
 {
-    public float visibleDuration = 2.25f;
-    public float invisibleDuration = 2.25f;
-    public float startOffset = 0.0f; // Offset before the platform starts its cycle
+    [SerializeField] private float visibleDuration = 2.25f;
+    [SerializeField] private float invisibleDuration = 2.25f;
+    [SerializeField] private float startOffset = 0.0f; // Offset before the platform starts its cycle
     private float timer;
     private SpriteRenderer spriteRenderer;
-    private Collider2D collide;
+    private Collider2D platformCollider;
     private bool isPlatformVisible = true;
     private bool isInitialized = false;
-    public Animator animator;
+    [SerializeField] private Animator animator;
 
     //================//
     //Animation States//
@@ -22,18 +22,17 @@ public class PhasingPlatform : MonoBehaviour
 
     void Start()
     {
-        collide = GetComponent<Collider2D>();
+        platformCollider = GetComponent<Collider2D>();
         animator = GetComponent<Animator>();
         timer = startOffset; // Start with the offset
     }
-
     void Update()
     {
         if (!isInitialized && timer <= 0)
         {
             // Initialize the platform state after offset
             animator.Play(ON_ANIMATION);
-            collide.enabled = true;
+            platformCollider.enabled = true;
             timer = visibleDuration;
             isPlatformVisible = true;
             isInitialized = true;
@@ -48,7 +47,7 @@ public class PhasingPlatform : MonoBehaviour
                 {
                     // Make platform invisible and disable collider
                     animator.Play(OFF_ANIMATION);
-                    collide.enabled = false;
+                    platformCollider.enabled = false;
                     timer = invisibleDuration;
                     isPlatformVisible = false;
                 }
@@ -56,7 +55,7 @@ public class PhasingPlatform : MonoBehaviour
                 {
                     // Make platform visible and enable collider
                     animator.Play(ON_ANIMATION);
-                    collide.enabled = true;
+                    platformCollider.enabled = true;
                     timer = visibleDuration;
                     isPlatformVisible = true;
                 }

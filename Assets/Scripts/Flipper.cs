@@ -24,22 +24,17 @@ public class Flipper : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        
-        if (collider.gameObject.CompareTag("Player"))  // Ensure the collided object is the player
-        {
-            Ducky playerController = collider.gameObject.GetComponent<Ducky>();
 
-            if (playerController != null)
-            {
-                // Apply the bump force
-                playerController.ApplyPushForce(bumpStrength * Direction, cooldownTime);
-                
-                //Play Bounce Animation
-                animator.Play(BOUNCE_ANIMATION);
-                
-                PlayBumpSound();
-            }
-        }
+        if (!collider.gameObject.CompareTag("Player")) return;// Ensure the collided object is the player
+        if (!collider.gameObject.TryGetComponent<Ducky>(out var playerController)) return;
+        
+        // Apply the bump force
+        playerController.ApplyPushForce(bumpStrength * Direction, cooldownTime);
+
+        //Play Bounce Animation
+        animator.Play(BOUNCE_ANIMATION);
+
+        PlayBumpSound();
     }
     private void PlayBumpSound()
     {

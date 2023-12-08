@@ -23,27 +23,28 @@ public class Ducky : MonoBehaviour
     public DuckSettings settings;
 
     [Header("Audio")]
-    public AudioSource audioPlayer;
-    public AudioClip[] jumpSounds;
-    public AudioClip[] impactSounds;
+    [SerializeField] private AudioSource audioPlayer;
+    [SerializeField] private AudioClip[] jumpSounds;
+    [SerializeField] private AudioClip[] impactSounds;
 
-    public AudioSource footstepsAudioSource;
-    public List<AudioClip> GroundFootSteps;
-    public List<AudioClip> GrassFootSteps;
-    public List<AudioClip> MetalFootSteps;
-    public List<AudioClip> WoodFootSteps;
-    public List<AudioClip> IceFootSteps;
-    enum groundMaterial
+    [SerializeField] private AudioSource footstepsAudioSource;
+    [SerializeField] private List<AudioClip> GroundFootSteps;
+    [SerializeField] private List<AudioClip> GrassFootSteps;
+    [SerializeField] private List<AudioClip> MetalFootSteps;
+    [SerializeField] private List<AudioClip> WoodFootSteps;
+    [SerializeField] private List<AudioClip> IceFootSteps;
+    enum GroundMaterial
     {
         Ground, Grass, Metal, Wood, Ice, Empty
     }
-    private groundMaterial footStepMaterial = groundMaterial.Empty;
+    private GroundMaterial footStepMaterial = GroundMaterial.Empty;
 
     [Header("Animation")]
-    public CameraFollow cameraFollow;
+    [SerializeField] private CameraFollow cameraFollow;
     public Animator animator;
     public ParticleSystem moveDust;
-    public ParticleSystem bounceDust;
+    [SerializeField] private ParticleSystem bounceDust;
+
     [Header("Movement")]
     private float flapDuration = 0.0f;
     private float jumpBufferCounter;
@@ -54,11 +55,11 @@ public class Ducky : MonoBehaviour
 
     private string currentAnimation = "Ducky Idle";
     private Rigidbody2D body;
-    public bool shouldJump;
+    [HideInInspector]public bool shouldJump;
     private bool onGround;
     private bool facingRight = true;
     private bool lastWallRight;
-    public bool canInput = true;
+    [HideInInspector]public bool canInput = true;
     [HideInInspector]public float horizontalPush = 0f;
 
     private float airborneTime;
@@ -66,8 +67,8 @@ public class Ducky : MonoBehaviour
     [Header("Ground Detection")]
     [SerializeField] private LayerMask groundLayer;
     public Vector3 boxCastOffset;
-    public Vector2 boxCastSize;
-    public float castDistance;
+    [SerializeField] private Vector2 boxCastSize;
+    [SerializeField] private float castDistance;
     [Header("Wall Detection")]
     public LayerMask wallLayer;
     [SerializeField] private Vector2 wallBoxCastOffset;
@@ -577,7 +578,7 @@ public class Ducky : MonoBehaviour
             body.AddForce(jumpDirection * settings.wallJumpForce, ForceMode2D.Impulse);
 
             currentState = DuckyState.Jumping; // Transition to jumping state
-            // Create Dust Particles
+                                               // Create Dust Particles
             moveDust.Play();
             // Play random jump sound.
             PlayRandomSound(jumpSounds);
@@ -650,6 +651,7 @@ public class Ducky : MonoBehaviour
         if (footstepClips == null || footstepClips.Count == 0) return;
 
         AudioClip clipToPlay;
+
         do
         {
             clipToPlay = footstepClips[Random.Range(0, footstepClips.Count)];
@@ -660,14 +662,13 @@ public class Ducky : MonoBehaviour
 
         footstepsAudioSource.clip = clipToPlay;
         footstepsAudioSource.pitch = Random.Range(0.9f, 1.1f);
-        //footstepsAudioSource.Play();
         footstepsAudioSource.PlayOneShot(clipToPlay);
     }
     private void HandleFootstepSounds()
     {
         if (onGround)
         {
-            SelectAndPlayFootstepSound();
+        SelectAndPlayFootstepSound();
         }
     }
     private void SelectAndPlayFootstepSound()
@@ -677,11 +678,11 @@ public class Ducky : MonoBehaviour
         List<AudioClip> selectedFootstepSounds = null;
         selectedFootstepSounds = footStepMaterial switch
         {
-            groundMaterial.Ground => GroundFootSteps,
-            groundMaterial.Grass => GrassFootSteps,
-            groundMaterial.Metal => MetalFootSteps,
-            groundMaterial.Wood => WoodFootSteps,
-            groundMaterial.Ice => IceFootSteps,
+            GroundMaterial.Ground => GroundFootSteps,
+            GroundMaterial.Grass => GrassFootSteps,
+            GroundMaterial.Metal => MetalFootSteps,
+            GroundMaterial.Wood => WoodFootSteps,
+            GroundMaterial.Ice => IceFootSteps,
             _ => GroundFootSteps,
         };
         if (selectedFootstepSounds != null)
@@ -783,18 +784,18 @@ public class Ducky : MonoBehaviour
             // Check the tag of the collider
             footStepMaterial = hit.collider.tag switch
             {
-                "Ground" => groundMaterial.Ground,
-                "Grass" => groundMaterial.Grass,
-                "Metal" => groundMaterial.Metal,
-                "Wood" => groundMaterial.Wood,
-                "Ice" => groundMaterial.Ice,
-                _ => groundMaterial.Empty,
+                "Ground" => GroundMaterial.Ground,
+                "Grass" => GroundMaterial.Grass,
+                "Metal" => GroundMaterial.Metal,
+                "Wood" => GroundMaterial.Wood,
+                "Ice" => GroundMaterial.Ice,
+                _ => GroundMaterial.Empty,
             };
         }
         else
         {
             // No ground detected
-            footStepMaterial = groundMaterial.Empty;
+            footStepMaterial = GroundMaterial.Empty;
         }
     }
     private void OnDrawGizmos()

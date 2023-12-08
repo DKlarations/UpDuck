@@ -8,32 +8,27 @@ public class Bumper : MonoBehaviour
 
     [SerializeField] private float bumpStrength = 10f;  // The strength of the bump
     [SerializeField] private float cooldownTime = 0.2f;  // Adjust the time as needed
-    public AudioSource audioSource;
+    [SerializeField] private AudioSource audioSource;
     [Header ("ANIMATION SETTINGS")]
     [SerializeField, Range(0f, 1f)] private float scaleDuration = 0.5f;
     [SerializeField, Range(1f, 4f)] private float maxScaleFactor = 2f;
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player"))  // Ensure the collided object is the player
-        {
-            Ducky playerController = collision.gameObject.GetComponent<Ducky>();
+        if (!collision.gameObject.CompareTag("Player")) return; // Ensure the collided object is the player
+        if (!collision.gameObject.TryGetComponent<Ducky>(out var playerController)) return;
 
-            if (playerController != null)
-            {
-                
-                // Get the normal of the contact point
-                Vector2 contactNormal = collision.GetContact(0).normal;
+        // Get the normal of the contact point
+        Vector2 contactNormal = collision.GetContact(0).normal;
 
-                // Apply the bump force
-                //playerController.BumperBounce(bumpStrength,contactNormal);
-                playerController.ApplyPushForce(-bumpStrength * contactNormal, cooldownTime);
-                //playerController.SetHorizontalPush(contactNormal.x < 0 ? bumpStrength : -bumpStrength);
+        // Apply the bump force
+        //playerController.BumperBounce(bumpStrength,contactNormal);
+        playerController.ApplyPushForce(-bumpStrength * contactNormal, cooldownTime);
+        //playerController.SetHorizontalPush(contactNormal.x < 0 ? bumpStrength : -bumpStrength);
 
-                StartCoroutine(ScaleBumper());
-                PlayBumpSound();
-            }
-        }
+        StartCoroutine(ScaleBumper());
+        PlayBumpSound();
+
     }
     private IEnumerator ScaleBumper()
     {
@@ -67,5 +62,4 @@ public class Bumper : MonoBehaviour
     {
         audioSource.Play();
     }
-
 }

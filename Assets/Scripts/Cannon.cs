@@ -3,19 +3,19 @@ using UnityEngine;
 
 public class Cannon : MonoBehaviour
 {
-    public Animator animator;
-    public PolygonCollider2D polygonCollider;
+    [SerializeField] private Animator animator;
+    [SerializeField] private PolygonCollider2D polygonCollider;
     [SerializeField] private Vector3 ejectionAngleOffset;
     [SerializeField] private float ejectionForce = 10f;
     [SerializeField] [Range(0, 360)] private float ejectionAngleDegrees = 45f;
 
-    public ParticleSystem featherParticles;
-    public ParticleSystem duckCannonSmokeParticles;
+    [SerializeField] private ParticleSystem featherParticles;
+    [SerializeField] private ParticleSystem duckCannonSmokeParticles;
     // Audio Components
     [Header("AUDIO")]
-    public AudioSource cannonAudio;
-    public AudioClip cannonLoad;
-    public AudioClip cannonFire;
+    [SerializeField] private AudioSource cannonAudio;
+    [SerializeField] private AudioClip cannonLoad;
+    [SerializeField] private AudioClip cannonFire;
 
     // Animation States
     const string IDLE_ANIMATION = "CannonIdle";
@@ -28,82 +28,74 @@ public class Cannon : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        if (collider.CompareTag("Player")) // Check if the collider is the player
-        {
+        if (!collider.gameObject.CompareTag("Player")) return;
             StartCoroutine(PlayerGetsLaunched(collider.gameObject));
-        }
     }
 
     private IEnumerator PlayerGetsLaunched(GameObject player)
     {
-        // Access the required components
-        SpriteRenderer playerSprite = player.GetComponent<SpriteRenderer>();
-        Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
-        Ducky playerScript = player.GetComponent<Ducky>();
+        if (!player.TryGetComponent<SpriteRenderer>(out var playerSprite)) yield break;
+        if (!player.TryGetComponent<Ducky>(out var playerScript)) yield break;
+        if (!player.TryGetComponent<Rigidbody2D>(out var playerRb)) yield break;
 
         // Disable player's sprite, movement, and input
-        if (playerSprite != null && playerRb != null && playerScript != null)
-        {
-            playerSprite.enabled = false;
-            animator.Play(FIRING_ANIMATION);
-            playerRb.velocity = Vector2.zero;
-            playerRb.isKinematic = true;
-            polygonCollider.enabled = false;// Turn off Cannon's Collider to avoid Grounded state
-            playerScript.canInput = false; // Disable player input
+        playerSprite.enabled = false;
+        animator.Play(FIRING_ANIMATION);
+        playerRb.velocity = Vector2.zero;
+        playerRb.isKinematic = true;
+        polygonCollider.enabled = false;// Turn off Cannon's Collider to avoid Grounded state
+        playerScript.canInput = false; // Disable player input
 
-            // Move player to the ejection origin
-            Vector3 ejectionOrigin = new Vector3 (transform.position.x,transform.position.y, 0) + ejectionAngleOffset;
-            player.transform.position = ejectionOrigin;
+        // Move player to the ejection origin
+        Vector3 ejectionOrigin = new Vector3 (transform.position.x,transform.position.y, 0) + ejectionAngleOffset;
+        player.transform.position = ejectionOrigin;
 
-            // Play cannon load audio
-            cannonAudio.clip = cannonLoad;
-            cannonAudio.Play();
+        // Play cannon load audio
+        cannonAudio.clip = cannonLoad;
+        cannonAudio.Play();
 
-            playerScript.ChangeToCannonball();
-            playerScript.ResetAirTime(); //Change air variables to 0
-            
-            // POSSIBLY Wait for the loading audio to finish (cannonLoad.Length)
-            yield return new WaitForSeconds(1f);
+        playerScript.ChangeToCannonball();
+        playerScript.ResetAirTime(); //Change air variables to 0
+        
+        // POSSIBLY Wait for the loading audio to finish (cannonLoad.Length)
+        yield return new WaitForSeconds(1f);
 
-            
-            playerSprite.enabled = true;
-            playerRb.isKinematic = false;
-            IncreaseDuckParticles();
-            
+        
+        playerSprite.enabled = true;
+        playerRb.isKinematic = false;
+        IncreaseDuckParticles();
+        
 
-            ApplyEjectionForce(player); // Launch the player
-            duckCannonSmokeParticles.Play();
-            featherParticles.Play();
-            playerScript.ResetAirTime(); //Resetting this twice to avoid TiredFall Behavior
-            playerScript.shouldJump = false;
-            playerScript.canInput = true; // Re-enable player input
-            
+        ApplyEjectionForce(player); // Launch the player
+        duckCannonSmokeParticles.Play();
+        featherParticles.Play();
+        playerScript.ResetAirTime(); //Resetting this twice to avoid TiredFall Behavior
+        playerScript.shouldJump = false;
+        playerScript.canInput = true; // Re-enable player input
+        
 
-            // Play cannon fire audio
-            cannonAudio.clip = cannonFire;
-            cannonAudio.Play();
+        // Play cannon fire audio
+        cannonAudio.clip = cannonFire;
+        cannonAudio.Play();
 
-            // Change animation back to idle
-            animator.Play(IDLE_ANIMATION);
+        // Change animation back to idle
+        animator.Play(IDLE_ANIMATION);
 
-            yield return new WaitForSeconds(1.5f);
-            DecreaseDuckParticles();
-            polygonCollider.enabled = true;// Turn on Cannon's Collider
-        }
+        yield return new WaitForSeconds(1.5f);
+        DecreaseDuckParticles();
+        polygonCollider.enabled = true;// Turn on Cannon's Collider
     }
 
     private void ApplyEjectionForce(GameObject player)
     {
-        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            // Convert angle to radians and calculate direction
-            float angleInRadians = ejectionAngleDegrees * Mathf.Deg2Rad;
-            Vector2 forceDirection = new Vector2(Mathf.Cos(angleInRadians), Mathf.Sin(angleInRadians));
+        if (!player.TryGetComponent<Rigidbody2D>(out var rb)) return;
 
-            // Apply the force
-            rb.AddForce(forceDirection.normalized * ejectionForce, ForceMode2D.Impulse);
-        }
+        // Convert angle to radians and calculate direction
+        float angleInRadians = ejectionAngleDegrees * Mathf.Deg2Rad;
+        Vector2 forceDirection = new Vector2(Mathf.Cos(angleInRadians), Mathf.Sin(angleInRadians));
+
+        // Apply the force
+        rb.AddForce(forceDirection.normalized * ejectionForce, ForceMode2D.Impulse);
     }
     private void OnDrawGizmosSelected()
     {

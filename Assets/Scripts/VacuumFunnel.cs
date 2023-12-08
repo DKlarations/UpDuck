@@ -3,11 +3,11 @@ using UnityEngine;
 
 public class VacuumFunnel : MonoBehaviour
 {
-    public CircleCollider2D circleCollider;
-    public PolygonCollider2D polygonCollider;
-    public ParticleSystem suctionParticles; 
-    public ParticleSystem ejectionParticles; 
-    public Animator animator;
+    [SerializeField] private CircleCollider2D circleCollider;
+    [SerializeField] private PolygonCollider2D polygonCollider;
+    [SerializeField] private ParticleSystem suctionParticles;
+    [SerializeField] private ParticleSystem ejectionParticles;
+    [SerializeField] private Animator animator;
     [SerializeField] private float attractorRange = 5f;
     [SerializeField] private float attractorStrength = 5f;
     [SerializeField] [Range(0, 360)] private float attractorCenterAngle = 0f; // Center of the attractor zone
@@ -20,13 +20,13 @@ public class VacuumFunnel : MonoBehaviour
     //AUDIO COMPONENTS//
     //================//
     [Header("AUDIO")]
-    public AudioSource vacuumAudio;
-    public AudioSource otherAudio;
-    public AudioClip vacuumStart;
-    public AudioClip vacuumOn;
-    public AudioClip vacuumStop;
-    public AudioClip suckedUpSound;
-    public AudioClip ejectionSound;
+    [SerializeField] private AudioSource vacuumAudio;
+    [SerializeField] private AudioSource otherAudio;
+    [SerializeField] private AudioClip vacuumStart;
+    [SerializeField] private AudioClip vacuumOn;
+    [SerializeField] private AudioClip vacuumStop;
+    [SerializeField] private AudioClip suckedUpSound;
+    [SerializeField] private AudioClip ejectionSound;
 
     //================//
     //Animation States//
@@ -50,8 +50,6 @@ public class VacuumFunnel : MonoBehaviour
         SpriteRenderer playerSprite = player.GetComponent<SpriteRenderer>();
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
         Ducky playerScript = player.GetComponent<Ducky>();
-        
-
         
         if (playerSprite != null && playerRb != null && playerScript != null)
         {
@@ -150,87 +148,82 @@ public class VacuumFunnel : MonoBehaviour
 
     private void ApplyEjectionForce(GameObject player)
     {
-        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
+        if (!player.TryGetComponent<Rigidbody2D>(out var rb))return;
+
             // Convert angle to radians and calculate direction
             float angleInRadians = ejectionAngleDegrees * Mathf.Deg2Rad;
             Vector2 forceDirection = new Vector2(Mathf.Cos(angleInRadians), Mathf.Sin(angleInRadians));
 
             // Apply the force
             rb.AddForce(forceDirection.normalized * ejectionForce, ForceMode2D.Impulse);
-        }
     }
     public void HandleEnterTrigger(Collider2D collider)
     {
-        if (collider.CompareTag("Player")) // Check if the collider is the player
+        
+        if (!collider.CompareTag("Player")) return;  // Check if the collider is the player 
+
+        animator.Play(ACTIVATED_ANIMATION);
+
+        //Play Vacuum Start Sounds
+        AudioClip clipToPlay = vacuumStart;
+        vacuumAudio.clip = clipToPlay;
+        vacuumAudio.Play();
+
+        if (suctionParticles != null)
         {
-            animator.Play(ACTIVATED_ANIMATION); 
-
-            //Play Vacuum Start Sounds
-            AudioClip clipToPlay = vacuumStart;
-            vacuumAudio.clip = clipToPlay;
-            vacuumAudio.Play(); 
-
-            if (suctionParticles != null)
-            {
-                suctionParticles.Play(); // Turn on the particle system
-            }
+            suctionParticles.Play(); // Turn on the particle system
         }
     }
 
     public void HandleExitTrigger(Collider2D collider)
     {
         animator.Play(IDLE_ANIMATION);
-        if (collider.CompareTag("Player")) // Check if the collider is the player
-        {
-            //Play Vacuum Start Sounds
-            AudioClip clipToPlay = vacuumStop;
-            vacuumAudio.clip = clipToPlay;
-            vacuumAudio.Play();
+        if (!collider.CompareTag("Player")) return;  // Check if the collider is the player 
+         
+        //Play Vacuum Start Sounds
+        AudioClip clipToPlay = vacuumStop;
+        vacuumAudio.clip = clipToPlay;
+        vacuumAudio.Play();
 
-            if (suctionParticles != null)
-            {
-                suctionParticles.Stop(); // Turn off the particle system
-            }
+        if (suctionParticles != null)
+        {
+            suctionParticles.Stop(); // Turn off the particle system
         }
     }
     public void HandleStayTrigger(Collider2D collider)
     {
-        Rigidbody2D rb = collider.GetComponent<Rigidbody2D>();
+        if (!collider.CompareTag("Player")) return;
+        if (!collider.TryGetComponent<Rigidbody2D>(out var rb))return;
+        
 
-        if (collider.CompareTag("Player") && rb != null)
+        if (!vacuumAudio.isPlaying)
         {
-            if (!vacuumAudio.isPlaying)
-            {
-                //Play Vacuum On Sounds
-                AudioClip clipToPlay = vacuumOn;
-                vacuumAudio.clip = clipToPlay;
-                vacuumAudio.Play();
-            }
+            //Play Vacuum On Sounds
+            AudioClip clipToPlay = vacuumOn;
+            vacuumAudio.clip = clipToPlay;
+            vacuumAudio.Play();
+        }
 
-            Vector2 directionToCenter = (transform.position - collider.transform.position).normalized;
-            float distanceToCenter = Vector2.Distance(transform.position, collider.transform.position);
+        Vector2 directionToCenter = (transform.position - collider.transform.position).normalized;
+        float distanceToCenter = Vector2.Distance(transform.position, collider.transform.position);
 
-            if (distanceToCenter <= 0) 
-                return;
+        if (distanceToCenter <= 0) return;
 
-            float angleToCenter = Mathf.Atan2(directionToCenter.y, directionToCenter.x) * Mathf.Rad2Deg;
-            angleToCenter = NormalizeAngle(angleToCenter);
+        float angleToCenter = Mathf.Atan2(directionToCenter.y, directionToCenter.x) * Mathf.Rad2Deg;
+        angleToCenter = NormalizeAngle(angleToCenter);
 
-            // Check if the object is within the specified angle range
-            float startAngle = attractorCenterAngle - (attractorSpanAngle / 2f);
-            float endAngle = attractorCenterAngle + (attractorSpanAngle / 2f);
-            if (IsAngleWithinRange(angleToCenter, startAngle, endAngle))
-            {
-                float scaledForce = attractorStrength / distanceToCenter;
-                rb.AddForce(directionToCenter * scaledForce, ForceMode2D.Force);
-            }
+        // Check if the object is within the specified angle range
+        float startAngle = attractorCenterAngle - (attractorSpanAngle / 2f);
+        float endAngle = attractorCenterAngle + (attractorSpanAngle / 2f);
+        if (IsAngleWithinRange(angleToCenter, startAngle, endAngle))
+        {
+            float scaledForce = attractorStrength / distanceToCenter;
+            rb.AddForce(directionToCenter * scaledForce, ForceMode2D.Force);
         }
     }
     public void ActivateEjectionParticles()
     {
-        if (ejectionParticles != null)
+        if (ejectionParticles != null) 
         {
             ejectionParticles.Play();
         }

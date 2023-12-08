@@ -12,10 +12,9 @@ public class ConveyorBelt : MonoBehaviour
     private bool isAccelerating = false;
     private bool isOnStraights = false;
     [SerializeField] private bool conveyorBeltMovingClockwise;
-    private Rigidbody2D playerRigidbody;
-    public CircleCollider2D leftSideCircleCollider;
-    public CircleCollider2D rightSideCircleCollider;
-    public Animator animator;
+    [SerializeField] private CircleCollider2D leftSideCircleCollider;
+    [SerializeField] private CircleCollider2D rightSideCircleCollider;
+    [SerializeField] private Animator animator;
     // Animation States
     const string IDLE_ANIMATION = "ConveyorBeltIdle";
     const string CLOCKWISE_STARTUP_ANIMATION = "ConveyorBeltClockwiseStartUp";
@@ -79,60 +78,54 @@ public class ConveyorBelt : MonoBehaviour
     }
     public void HandleTopOfConveyorStay(Collider2D collider)
     {
-        if (collider.CompareTag("Player"))
-        {
-            playerRigidbody = collider.GetComponent<Rigidbody2D>();
-            Vector2 direction = conveyorBeltMovingClockwise ? transform.right : -transform.right;
-            Vector2 force = direction * currentSpeed;
-            playerRigidbody.AddForce(force, ForceMode2D.Force);
-        }
+        if (!collider.CompareTag("Player")) return;
+        if (!collider.TryGetComponent<Rigidbody2D>(out var playerRb)) return;
+
+        Vector2 direction = conveyorBeltMovingClockwise ? transform.right : -transform.right;
+        Vector2 force = direction * currentSpeed;
+        playerRb.AddForce(force, ForceMode2D.Force);
     }
     public void HandleBottomOfConveyorStay(Collider2D collider)
     {
-        if (collider.CompareTag("Player"))
-        {
-            playerRigidbody = collider.GetComponent<Rigidbody2D>();
-            Vector2 direction = conveyorBeltMovingClockwise ? -transform.right : transform.right;
-            Vector2 force = direction * currentSpeed;
-            playerRigidbody.AddForce(force, ForceMode2D.Force);
-        }
+        if (!collider.CompareTag("Player")) return;
+        if (!collider.TryGetComponent<Rigidbody2D>(out var playerRb)) return;
+
+        Vector2 direction = conveyorBeltMovingClockwise ? -transform.right : transform.right;
+        Vector2 force = direction * currentSpeed;
+        playerRb.AddForce(force, ForceMode2D.Force);
     }
     public void HandleLeftOfConveyorStay(Collider2D collider)
     {
-        if (collider.CompareTag("Player") == !isOnStraights)
-        {
-            Rigidbody2D playerRigidbody = collider.GetComponent<Rigidbody2D>();
-            
-            // Calculate tangent force
-            Vector2 contactPoint = collider.ClosestPoint(leftSideCircleCollider.bounds.center);
-            Vector2 centerToPoint = contactPoint - (Vector2)leftSideCircleCollider.bounds.center;
-            Vector2 tangent = conveyorBeltMovingClockwise ? 
-                              new Vector2(centerToPoint.y, -centerToPoint.x) : 
-                              new Vector2(-centerToPoint.y, centerToPoint.x);
-            tangent.Normalize();
+        if (collider.CompareTag("Player") != !isOnStraights) return;
+        if (!collider.TryGetComponent<Rigidbody2D>(out var playerRb)) return;
 
-            // Apply the force
-            Vector2 force = tangent * currentSpeed;
-            playerRigidbody.AddForce(force, ForceMode2D.Force);
-        }
+        // Calculate tangent force
+        Vector2 contactPoint = collider.ClosestPoint(leftSideCircleCollider.bounds.center);
+        Vector2 centerToPoint = contactPoint - (Vector2)leftSideCircleCollider.bounds.center;
+        Vector2 tangent = conveyorBeltMovingClockwise ?
+                          new Vector2(centerToPoint.y, -centerToPoint.x) :
+                          new Vector2(-centerToPoint.y, centerToPoint.x);
+        tangent.Normalize();
+
+        // Apply the force
+        Vector2 force = tangent * currentSpeed;
+        playerRb.AddForce(force, ForceMode2D.Force);
     }
     public void HandleRightOfConveyorStay(Collider2D collider)
     {
-        if (collider.CompareTag("Player") == !isOnStraights)
-        {
-            Rigidbody2D playerRigidbody = collider.GetComponent<Rigidbody2D>();
-            
-            // Calculate tangent force
-            Vector2 contactPoint = collider.ClosestPoint(rightSideCircleCollider.bounds.center);
-            Vector2 centerToPoint = contactPoint - (Vector2)rightSideCircleCollider.bounds.center;
-            Vector2 tangent = conveyorBeltMovingClockwise ? 
-                              new Vector2(centerToPoint.y, -centerToPoint.x) : 
-                              new Vector2(centerToPoint.y, centerToPoint.x);
-            tangent.Normalize();
+        if (collider.CompareTag("Player") != !isOnStraights) return;
+        if (!collider.TryGetComponent<Rigidbody2D>(out var playerRigidbody)) return;
 
-            // Apply the force
-            Vector2 force = tangent * currentSpeed;
-            playerRigidbody.AddForce(force, ForceMode2D.Force);
-        }
+        // Calculate tangent force
+        Vector2 contactPoint = collider.ClosestPoint(rightSideCircleCollider.bounds.center);
+        Vector2 centerToPoint = contactPoint - (Vector2)rightSideCircleCollider.bounds.center;
+        Vector2 tangent = conveyorBeltMovingClockwise ?
+                          new Vector2(centerToPoint.y, -centerToPoint.x) :
+                          new Vector2(centerToPoint.y, centerToPoint.x);
+        tangent.Normalize();
+
+        // Apply the force
+        Vector2 force = tangent * currentSpeed;
+        playerRigidbody.AddForce(force, ForceMode2D.Force);
     }
 }

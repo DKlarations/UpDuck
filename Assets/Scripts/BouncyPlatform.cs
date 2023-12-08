@@ -4,9 +4,9 @@ using UnityEngine;
 public class BouncyPlatform : MonoBehaviour
 {
     [SerializeField] private float bounceForce = 10f; // Set desired bounce force
-    public AudioSource audioPlayer;
-    public AudioClip boingSounds;
-    public Animator animator;
+    [SerializeField] private AudioSource audioPlayer;
+    [SerializeField] private AudioClip boingSounds;
+    [SerializeField] private Animator animator;
     //================
     //Animation States
     //================
@@ -24,27 +24,20 @@ public class BouncyPlatform : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        if (collider.gameObject.CompareTag("Player")) 
-        {
-            Rigidbody2D rb = collider.gameObject.GetComponent<Rigidbody2D>();
-            if (rb != null)
-            {
-                Ducky playerController = collider.gameObject.GetComponent<Ducky>();
-                if (playerController != null)
-                {
-                    //Add Bounce
-                    playerController.VerticalBounce(bounceForce);
+        if (!collider.gameObject.CompareTag("Player")) return;
+        if (!collider.TryGetComponent<Rigidbody2D>(out var rb)) return;
+        if (!collider.TryGetComponent<Ducky>(out var playerController)) return;
 
-                    //Play Bounce Animation
-                    animator.Play(BOUNCE_ANIMATION);
+        //Add Bounce
+        playerController.VerticalBounce(bounceForce);
 
-                    //Play Boing 
-                    AudioClip clipToPlay = boingSounds;
-                    audioPlayer.clip = clipToPlay;
-                    audioPlayer.Play(); 
-                }
-            }
-        }
+        //Play Bounce Animation
+        animator.Play(BOUNCE_ANIMATION);
+
+        //Play Boing 
+        AudioClip clipToPlay = boingSounds;
+        audioPlayer.clip = clipToPlay;
+        audioPlayer.Play();
     }
 
     private void BackToIdleAnimation()

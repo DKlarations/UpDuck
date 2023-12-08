@@ -125,12 +125,12 @@ TextureImporter:
       name: Cannon5_0
       rect:
         serializedVersion: 2
-        x: 12
-        y: 8
-        width: 118
-        height: 57
+        x: 0
+        y: 0
+        width: 180
+        height: 61
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -145,7 +145,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: e0fd6bb8a981637489d7f280cf52b65c
     internalID: 0
     vertices: []
     indices: 

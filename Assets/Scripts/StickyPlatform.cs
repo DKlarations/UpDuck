@@ -7,18 +7,16 @@ public class StickyPlatform : MonoBehaviour
 {
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        if (collider.gameObject.name == "Ducky")
-        {
-            collider.gameObject.transform.SetParent(transform);
-        }
+        if (collider.gameObject.name != "Ducky") return;
+
+        collider.gameObject.transform.SetParent(transform);
     }
 
     private void OnTriggerExit2D(Collider2D collider)
     {
-        if (collider.gameObject.name == "Ducky")
-        {
-            collider.gameObject.transform.SetParent(null);
-        }
+        if (collider.gameObject.name != "Ducky") return;
+        
+        collider.gameObject.transform.SetParent(null);
     }
-    
+
 }

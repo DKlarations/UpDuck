@@ -3,10 +3,10 @@ using UnityEngine;
 
 public class TeeterTotter : MonoBehaviour
 {
-    public float tiltSpeed = 10f;
-    public float levelingSpeed = 5f;
-    public float levelingDelay = 1.0f;  // 1 second delay
-    public float angleTolerance = 1.0f; // Tolerance in degrees
+    [SerializeField] private float tiltSpeed = 10f;
+    [SerializeField] private float levelingSpeed = 5f;
+    [SerializeField] private float levelingDelay = 1.0f;  // 1 second delay
+    [SerializeField] private float angleTolerance = 1.0f; // Tolerance in degrees
     float targetAngle = 0f;
     private bool isPlayerOn = false;
     private bool shouldLevel = false;
@@ -19,25 +19,22 @@ public class TeeterTotter : MonoBehaviour
 
     void OnCollisionStay2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            isPlayerOn = true;
-            shouldLevel = false;  // Cancel leveling if the player is back on
-            StopCoroutine("LevelingDelay");  // Stop the leveling delay coroutine
+        if (!collision.gameObject.CompareTag("Player")) return;
 
-            float xPosDifference = collision.transform.position.x - transform.position.x;
-            float tiltAmount = xPosDifference * tiltSpeed;
-            rb.rotation += tiltAmount * Time.deltaTime;
-        }
+        isPlayerOn = true;
+        shouldLevel = false;  // Cancel leveling if the player is back on
+        StopCoroutine("LevelingDelay");  // Stop the leveling delay coroutine
+
+        float xPosDifference = collision.transform.position.x - transform.position.x;
+        float tiltAmount = xPosDifference * tiltSpeed;
+        rb.rotation += tiltAmount * Time.deltaTime;
     }
 
     void OnCollisionExit2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            isPlayerOn = false;
-            StartCoroutine("LevelingDelay");  // Start the leveling delay coroutine
-        }
+        if (!collision.gameObject.CompareTag("Player")) return;
+        isPlayerOn = false;
+        StartCoroutine("LevelingDelay");  // Start the leveling delay coroutine
     }
 
     IEnumerator LevelingDelay()

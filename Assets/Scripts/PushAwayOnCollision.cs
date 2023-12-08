@@ -14,22 +14,18 @@ public class PushAwayOnCollision : MonoBehaviour
     }
     void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            // Use the collision normal to determine the push direction
-            Vector2 pushDirection = collision.GetContact(0).normal; // Gets the normal at the point of contact
+        if (!collision.gameObject.CompareTag("Player")) return;
+        if (!collision.gameObject.TryGetComponent<Ducky>(out var playerScript)) return;
 
-            Ducky playerController = collision.gameObject.GetComponent<Ducky>();
+        // Use the collision normal to determine the push direction
+        Vector2 pushDirection = collision.GetContact(0).normal; // Gets the normal at the point of contact
 
-            if (playerController != null)
-            {
-                // Apply the force in the opposite direction of the collision normal
-                playerController.ApplyPushForce(-pushDirection * pushForce, cooldownTime);
-                
-                // Play Boing sound
-                audioPlayer.PlayOneShot(boingSound);
-            }
-        }
+        // Apply the force in the opposite direction of the collision normal
+        playerScript.ApplyPushForce(-pushDirection * pushForce, cooldownTime);
+        
+        // Play Boing sound
+        audioPlayer.PlayOneShot(boingSound);
+
     }
 }
 
