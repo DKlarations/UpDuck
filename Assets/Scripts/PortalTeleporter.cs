@@ -23,12 +23,12 @@ public class PortalTeleporter : MonoBehaviour
                 float angleDifference = otherPortal.eulerAngles.z - transform.eulerAngles.z;
 
                 // Calculate the new exit direction
-                Vector2 entryDirection = playerRb.velocity.normalized;
+                Vector2 entryDirection = playerRb.linearVelocity.normalized;
                 Quaternion rotation = Quaternion.Euler(0, 0, angleDifference);
                 Vector2 exitDirection = rotation * entryDirection;
 
                 // Apply the player's original speed in the new direction
-                playerRb.velocity = exitDirection * playerRb.velocity.magnitude;
+                playerRb.linearVelocity = exitDirection * playerRb.linearVelocity.magnitude;
 
                 // Update the teleportation cooldown
                 lastTeleportTime = Time.time;

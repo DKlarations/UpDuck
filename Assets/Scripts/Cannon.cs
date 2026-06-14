@@ -41,8 +41,9 @@ public class Cannon : MonoBehaviour
         // Disable player's sprite, movement, and input
         playerSprite.enabled = false;
         animator.Play(FIRING_ANIMATION);
-        playerRb.velocity = Vector2.zero;
-        playerRb.isKinematic = true;
+        playerRb.linearVelocity = Vector2.zero;
+        RigidbodyType2D previousBodyType = playerRb.bodyType;
+        playerRb.bodyType = RigidbodyType2D.Kinematic;
         polygonCollider.enabled = false;// Turn off Cannon's Collider to avoid Grounded state
         playerScript.canInput = false; // Disable player input
 
@@ -62,7 +63,7 @@ public class Cannon : MonoBehaviour
 
         
         playerSprite.enabled = true;
-        playerRb.isKinematic = false;
+        playerRb.bodyType = previousBodyType;
         IncreaseDuckParticles();
         
 

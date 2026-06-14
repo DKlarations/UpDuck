@@ -106,8 +106,14 @@ public class Ducky : MonoBehaviour
     [UnityEditor.MenuItem("DuckStuff/SelectDuck #d")]
     public static void MoveDuck()
     {
-        //   Selection.activeGameObject = GameObject.FindObjectOfType<Ducky>().gameObject;
-        Selection.activeGameObject = GameObject.FindFirstObjectByType<Ducky>().gameObject;
+        Ducky ducky = Object.FindAnyObjectByType<Ducky>();
+        if (ducky == null)
+        {
+            Debug.LogError("Ducky not found in the scene!");
+            return;
+        }
+
+        Selection.activeGameObject = ducky.gameObject;
     }
 #endif
 
@@ -118,7 +124,7 @@ public class Ducky : MonoBehaviour
         impulseSource = GetComponent<CinemachineImpulseSource>();
         controls = new PlayerControls();
 
-        body.velocity = Vector2.zero;
+        body.linearVelocity = Vector2.zero;
 
         #if UNITY_EDITOR
             transform.position = transform.position;
@@ -152,8 +158,8 @@ public class Ducky : MonoBehaviour
         //Landing logic, check for faceplant, check for idle, otherwise Ducky is not on ground.
         if (onGround
         && IsFallingState
-        && body.velocity.y <= settings.yVelocityBuffer
-        && body.velocity.y >= -settings.yVelocityBuffer
+        && body.linearVelocity.y <= settings.yVelocityBuffer
+        && body.linearVelocity.y >= -settings.yVelocityBuffer
         )
         {
             OnLanding();  //Reset all airborne stats and flags
@@ -161,7 +167,7 @@ public class Ducky : MonoBehaviour
 
             if (currentState != DuckyState.Dead)
             {
-                body.velocity = new Vector2(0, 0);  //Stop all momentum when faceplanting
+                body.linearVelocity = new Vector2(0, 0);  //Stop all momentum when faceplanting
             }
 
             currentState = DuckyState.Dead;
@@ -172,8 +178,8 @@ public class Ducky : MonoBehaviour
             PlayRandomSound(impactSounds);
         }
         else if (onGround
-        && body.velocity.y <= settings.yVelocityBuffer
-        && body.velocity.y >= -settings.yVelocityBuffer
+        && body.linearVelocity.y <= settings.yVelocityBuffer
+        && body.linearVelocity.y >= -settings.yVelocityBuffer
         && currentState != DuckyState.Dead
         && currentState != DuckyState.Wave)
         {
@@ -185,7 +191,7 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Idle;
         }
         else if (!onGround
-        && body.velocity.y < 0
+        && body.linearVelocity.y < 0
         && IsFallingState)
         {
             airborneTime += Time.deltaTime;
@@ -245,23 +251,23 @@ public class Ducky : MonoBehaviour
         
 
         //Small Jump Code. 
-        if (isJumpReleased && body.velocity.y > 0)
+        if (isJumpReleased && body.linearVelocity.y > 0)
         {
             currentState = DuckyState.Jumping;
-            body.velocity = new Vector2(body.velocity.x, body.velocity.y * .5f);
+            body.linearVelocity = new Vector2(body.linearVelocity.x, body.linearVelocity.y * .5f);
         }
 
         //Higher Gravity when past apex of jump
-        if (body.velocity.y < 0 || (body.velocity.y > 0 && !isJumpPressed))
+        if (body.linearVelocity.y < 0 || (body.linearVelocity.y > 0 && !isJumpPressed))
         {
-            body.velocity += (settings.fallMultiplier - 1) * Physics2D.gravity.y * Time.deltaTime * Vector2.up;
+            body.linearVelocity += (settings.fallMultiplier - 1) * Physics2D.gravity.y * Time.deltaTime * Vector2.up;
         }
 
         //Flapping code. 
         if (isJumpHeld && !onGround && flapDuration < settings.maxFlapDuration)
         {
             // Check if Ducky is either in Falling state or airborne beyond coyote time
-            if ((currentState == DuckyState.Falling || airborneTime > settings.coyoteTime) && body.velocity.y < 0)
+            if ((currentState == DuckyState.Falling || airborneTime > settings.coyoteTime) && body.linearVelocity.y < 0)
             {
                 freefallTime = 0f; // Reset freefall time
                 currentState = DuckyState.Flapping;
@@ -289,7 +295,7 @@ public class Ducky : MonoBehaviour
         }
 
         //This is the ducky going into a fall animation if going to faceplant.
-        if (body.velocity.y < 0
+        if (body.linearVelocity.y < 0
         && currentState != DuckyState.TiredFall
         && freefallTime > settings.deadThreshold)
         {
@@ -297,13 +303,13 @@ public class Ducky : MonoBehaviour
         }
 
         //Fall Speed Clamping
-        if (body.velocity.y < -10)
+        if (body.linearVelocity.y < -10)
         {
-            body.velocity = Vector3.ClampMagnitude(body.velocity, settings.maxFallVelocity);
+            body.linearVelocity = Vector3.ClampMagnitude(body.linearVelocity, settings.maxFallVelocity);
         }
 
         //Adjust camera with a jump
-        if (body.velocity.y < 0 && !onGround)
+        if (body.linearVelocity.y < 0 && !onGround)
         {
             cameraFollow.AdjustCameraForJump(!onGround);
         }
@@ -339,7 +345,9 @@ public class Ducky : MonoBehaviour
         isOnWall = wallHit.collider != null && !onGround;
 
         if (!isOnWall)
+        {
             wallJumpBufferCounter -= Time.fixedDeltaTime;
+        }
 
         if (isOnWall && (currentState != DuckyState.TiredFall || currentState == DuckyState.Dead))
         {
@@ -451,11 +459,11 @@ public class Ducky : MonoBehaviour
             {   //GROUND MOVEMENT LOGIC
                 if(Mathf.Abs(horizontalInput) > 0) 
                 {   //ACCELERATE
-                    if (Mathf.Abs(body.velocity.x) < targetSpeed)
+                    if (Mathf.Abs(body.linearVelocity.x) < targetSpeed)
                     {
                         // Apply an accelerating force based on the difference in speed
                         float targetVelocityX = horizontalInput * targetSpeed;
-                        float speedDiff = targetVelocityX - body.velocity.x;
+                        float speedDiff = targetVelocityX - body.linearVelocity.x;
                         float force = speedDiff * acceleration;
                         body.AddForce(new Vector2(force, 0), ForceMode2D.Force);
                     }
@@ -469,7 +477,7 @@ public class Ducky : MonoBehaviour
             {   //AIR MOVEMENT LOGIC
                 float targetVelocityX = horizontalInput * settings.airMaxSpeed;
                 deceleration = settings.airDeceleration;
-                if (Mathf.Abs(body.velocity.x) < settings.airMaxSpeed)
+                if (Mathf.Abs(body.linearVelocity.x) < settings.airMaxSpeed)
                 {
                     float airControlForce = horizontalInput * settings.airControlStrength;
                     body.AddForce(new Vector2(airControlForce, 0), ForceMode2D.Force);
@@ -489,15 +497,15 @@ public class Ducky : MonoBehaviour
     }
     private void HandleDeceleration(float deceleration, float velocityStopThreshold)
     {
-        if (Mathf.Abs(body.velocity.x) > velocityStopThreshold)
+        if (Mathf.Abs(body.linearVelocity.x) > velocityStopThreshold)
         {
-            float decelerationForce = -Mathf.Sign(body.velocity.x) * deceleration;
+            float decelerationForce = -Mathf.Sign(body.linearVelocity.x) * deceleration;
             body.AddForce(new Vector2(decelerationForce, 0), ForceMode2D.Force);
         }
         else
         {
             // Clamp velocity to zero if it's within the threshold
-            body.velocity = new Vector2(0, body.velocity.y);
+            body.linearVelocity = new Vector2(0, body.linearVelocity.y);
         }
     }
     public void ApplyPushForce(Vector2 force, float cooldownTime)
@@ -553,7 +561,7 @@ public class Ducky : MonoBehaviour
             currentState = DuckyState.Jumping;
 
             // Cancel out any existing vertical velocity before applying the jump impulse
-            body.velocity = new Vector2(body.velocity.x, 0);
+            body.linearVelocity = new Vector2(body.linearVelocity.x, 0);
 
             // Apply an impulse force upwards
             body.AddForce(Vector2.up * settings.jumpForce, ForceMode2D.Impulse);
@@ -574,7 +582,7 @@ public class Ducky : MonoBehaviour
         if (wallJumpBufferCounter > 0f && jumpBufferCounter > 0f)
         {
             Vector2 jumpDirection = CalculateWallJumpDirection();
-            body.velocity = new Vector2(0, 0); // Reset existing velocity
+            body.linearVelocity = new Vector2(0, 0); // Reset existing velocity
             body.AddForce(jumpDirection * settings.wallJumpForce, ForceMode2D.Impulse);
 
             currentState = DuckyState.Jumping; // Transition to jumping state
@@ -603,7 +611,7 @@ public class Ducky : MonoBehaviour
         flapDuration += Time.fixedDeltaTime;
         freefallTime = 0f;  
 
-        body.velocity = new Vector2(body.velocity.x, body.velocity.y + settings.flapStrength * Time.fixedDeltaTime);
+        body.linearVelocity = new Vector2(body.linearVelocity.x, body.linearVelocity.y + settings.flapStrength * Time.fixedDeltaTime);
     }
     private void HandleWallSlide()
     {
@@ -771,7 +779,7 @@ public class Ducky : MonoBehaviour
         {
             totalForce += settings.jumpForce;
         }
-        body.velocity = new Vector2(body.velocity.x, 0);  // Reset vertical velocity
+        body.linearVelocity = new Vector2(body.linearVelocity.x, 0);  // Reset vertical velocity
         body.AddForce(new Vector2(0, totalForce), ForceMode2D.Impulse);  // Apply combined force
 
         jumpBufferCounter = 0f;

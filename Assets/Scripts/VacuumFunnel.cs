@@ -64,8 +64,9 @@ public class VacuumFunnel : MonoBehaviour
             
             playerSprite.enabled = false;
             animator.Play(CAPTURED_ANIMATION);
-            playerRb.velocity = Vector2.zero;
-            playerRb.isKinematic = true;
+            playerRb.linearVelocity = Vector2.zero;
+            RigidbodyType2D previousBodyType = playerRb.bodyType;
+            playerRb.bodyType = RigidbodyType2D.Kinematic;
             playerScript.canInput = false; // Disable player input
         
             // Move player to the ejection origin
@@ -89,7 +90,7 @@ public class VacuumFunnel : MonoBehaviour
             yield return new WaitForSeconds(.25f);
 
             playerSprite.enabled = true;
-            playerRb.isKinematic = false;
+            playerRb.bodyType = previousBodyType;
             circleCollider.enabled = false; // Turn off the Circle collider - should turn off the vacuum
             
 

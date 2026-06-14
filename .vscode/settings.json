@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "UpDuck.sln"
+    "dotnet.defaultSolution": "UpDuck.slnx"
 }

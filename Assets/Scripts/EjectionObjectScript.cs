@@ -13,7 +13,7 @@ public class EjectionObjectScript : MonoBehaviour
         if (rb != null)
         {
             Vector2 ejectionDirection = CalculateEjectionDirection();
-            rb.velocity = ejectionDirection * ejectionForce;
+            rb.linearVelocity = ejectionDirection * ejectionForce;
         }
     }
 
